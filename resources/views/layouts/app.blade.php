@@ -78,85 +78,86 @@
                 </div>
             </div>
 
-            {{-- DATA MASTER (khusus supervisor) --}}
-            @if(auth()->user()->isSupervisor())
-
+            {{-- DATA MASTER --}}
             <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Data Master</p>
 
-            {{-- Dropdown Management Sketsa --}}
+            {{-- Dropdown Management Sketsa (semua role bisa akses) --}}
             <div x-data="{ open: {{ request()->routeIs('sketsa.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                               {{ request()->routeIs('sketsa.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                            {{ request()->routeIs('sketsa.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                         </svg>
                         Management Sketsa
                     </div>
                     <svg class="w-4 h-4 transition-transform duration-200 shrink-0"
-                         :class="open ? 'rotate-180' : ''"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        :class="open ? 'rotate-180' : ''"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <div x-show="open" x-transition class="mt-1 ml-4 space-y-1 border-l border-gray-700 pl-3">
                     <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('sketsa.wa') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                            {{ request()->routeIs('sketsa.wa') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
                         Sketsa WA
                     </a>
                     <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('sketsa.wb') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                            {{ request()->routeIs('sketsa.wb') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
                         Sketsa WB
                     </a>
                     <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('sketsa.sls') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
+                            {{ request()->routeIs('sketsa.sls') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
                         Sketsa SLS
                     </a>
                 </div>
             </div>
 
-            {{-- Data Wilayah --}}
-            <a href="#"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                      {{ request()->routeIs('wilayah.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Data Wilayah
-            </a>
+            {{-- Menu khusus Supervisor --}}
+            @if(auth()->user()->isSupervisor())
 
-            {{-- Data Kegiatan --}}
-            <a href="#"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                      {{ request()->routeIs('kegiatan.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-                Data Kegiatan
-            </a>
+                {{-- Data Wilayah --}}
+                <a href="#"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                        {{ request()->routeIs('wilayah.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Data Wilayah
+                </a>
 
-            {{-- Data Pengguna --}}
-            <a href="{{ route('pengguna.index') }}"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                      {{ request()->routeIs('pengguna.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Data Pengguna
-            </a>
+                {{-- Data Kegiatan --}}
+                <a href="{{ route('kegiatan.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                        {{ request()->routeIs('kegiatan.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Data Kegiatan
+                </a>
+
+                {{-- Data Pengguna --}}
+                <a href="{{ route('pengguna.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                        {{ request()->routeIs('pengguna.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Data Pengguna
+                </a>
 
             @endif
 
