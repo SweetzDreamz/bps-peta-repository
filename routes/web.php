@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\KegiatanController;
+use App\Http\Controllers\WilayahController;
 
 Route::middleware(['auth'])->group(function () {
     // Pengguna
@@ -17,6 +18,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/kegiatan', [KegiatanController::class, 'store'])->name('kegiatan.store');
     Route::put('/kegiatan/{kegiatan}', [KegiatanController::class, 'update'])->name('kegiatan.update');
     Route::delete('/kegiatan/{kegiatan}', [KegiatanController::class, 'destroy'])->name('kegiatan.destroy');
+
+     // Wilayah
+    Route::get('/wilayah', [WilayahController::class, 'index'])->name('wilayah.index');
+    Route::post('/wilayah', [WilayahController::class, 'store'])->name('wilayah.store');
+    Route::put('/wilayah/{wilayah}', [WilayahController::class, 'update'])->name('wilayah.update');
+    Route::delete('/wilayah/{wilayah}', [WilayahController::class, 'destroy'])->name('wilayah.destroy');
 });
 
 Route::get('/', function () {
