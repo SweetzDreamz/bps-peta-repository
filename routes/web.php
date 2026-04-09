@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\SketsaController;
 
 Route::middleware(['auth'])->group(function () {
     // Pengguna
@@ -24,6 +25,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wilayah', [WilayahController::class, 'store'])->name('wilayah.store');
     Route::put('/wilayah/{wilayah}', [WilayahController::class, 'update'])->name('wilayah.update');
     Route::delete('/wilayah/{wilayah}', [WilayahController::class, 'destroy'])->name('wilayah.destroy');
+
+     // Sketsa
+    Route::get('/sketsa/wa',  [SketsaController::class, 'wa'])->name('sketsa.wa');
+    Route::get('/sketsa/wb',  [SketsaController::class, 'wb'])->name('sketsa.wb');
+    Route::get('/sketsa/sls', [SketsaController::class, 'sls'])->name('sketsa.sls');
+    Route::post('/sketsa',    [SketsaController::class, 'store'])->name('sketsa.store');
+    Route::put('/sketsa/{peta}',    [SketsaController::class, 'update'])->name('sketsa.update');
+    Route::delete('/sketsa/{peta}', [SketsaController::class, 'destroy'])->name('sketsa.destroy');
+    Route::post('/sketsa/{peta}/download', [SketsaController::class, 'download'])->name('sketsa.download');
+
+    // AJAX
+    Route::get('/api/desa-by-kec',      [SketsaController::class, 'getDesaByKec'])->name('api.desa');
+    Route::get('/api/sls-by-wilayah',   [SketsaController::class, 'getSlsByWilayah'])->name('api.sls');
 });
 
 Route::get('/', function () {

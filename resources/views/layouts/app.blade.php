@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'BPS Kota Bogor') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -57,19 +58,19 @@
                     </svg>
                 </button>
                 <div x-show="open" x-transition class="mt-1 ml-4 space-y-1 border-l border-gray-700 pl-3">
-                    <a href="#"
+                    <a href="{{ route('sketsa.wa') }}"
                     class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
                             {{ request()->routeIs('sketsa.wa') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
                         Sketsa WA
                     </a>
-                    <a href="#"
+                    <a href="{{ route('sketsa.wb') }}"
                     class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
                             {{ request()->routeIs('sketsa.wb') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
                         Sketsa WB
                     </a>
-                    <a href="#"
+                    <a href="{{ route('sketsa.sls') }}"
                     class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
                             {{ request()->routeIs('sketsa.sls') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                         <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>

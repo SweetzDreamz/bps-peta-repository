@@ -14,7 +14,6 @@ class Peta extends Model
         'sls_id',
         'kegiatan_id',
         'tahun',
-        'versi',
         'path_file',
         'user_id',
     ];
