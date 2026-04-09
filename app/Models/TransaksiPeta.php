@@ -14,31 +14,30 @@ class TransaksiPeta extends Model
         'kegiatan_id',
         'tanggal',
         'status',
+        'file_kembali',
+        'waktu_kembali',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal'       => 'date',
+        'waktu_kembali' => 'datetime',
     ];
 
-    // Transaksi terkait satu peta
     public function peta()
     {
         return $this->belongsTo(Peta::class, 'peta_id');
     }
 
-    // Transaksi dilakukan oleh satu user
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Transaksi terkait satu kegiatan
     public function kegiatan()
     {
         return $this->belongsTo(Kegiatan::class, 'kegiatan_id');
     }
 
-    // Helper cek status
     public function isDipinjam(): bool
     {
         return $this->status === 'dipinjam';

@@ -39,85 +39,27 @@
             {{-- TRANSAKSI --}}
             <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Transaksi</p>
 
-            {{-- Dropdown Management Sketsa (semua role bisa akses) --}}
-            <div x-data="{ open: {{ request()->routeIs('sketsa.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open"
-                        class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                            {{ request()->routeIs('sketsa.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                        </svg>
-                        Management Sketsa
-                    </div>
-                    <svg class="w-4 h-4 transition-transform duration-200 shrink-0"
-                        :class="open ? 'rotate-180' : ''"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div x-show="open" x-transition class="mt-1 ml-4 space-y-1 border-l border-gray-700 pl-3">
-                    <a href="{{ route('sketsa.wa') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                            {{ request()->routeIs('sketsa.wa') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        Sketsa WA
-                    </a>
-                    <a href="{{ route('sketsa.wb') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                            {{ request()->routeIs('sketsa.wb') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        Sketsa WB
-                    </a>
-                    <a href="{{ route('sketsa.sls') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                            {{ request()->routeIs('sketsa.sls') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        Sketsa SLS
-                    </a>
-                </div>
-            </div>
+            {{-- Management Sketsa --}}
+            <a href="{{ route('sketsa.wa') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                    {{ request()->routeIs('sketsa.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+                Management Sketsa
+            </a>
 
-            {{-- Dropdown History --}}
-            <div x-data="{ open: {{ request()->routeIs('history.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open"
-                        class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                               {{ request()->routeIs('history.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        History
-                    </div>
-                    <svg class="w-4 h-4 transition-transform duration-200 shrink-0"
-                         :class="open ? 'rotate-180' : ''"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div x-show="open" x-transition class="mt-1 ml-4 space-y-1 border-l border-gray-700 pl-3">
-                    <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('history.wa') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        History WA
-                    </a>
-                    <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('history.wb') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        History WB
-                    </a>
-                    <a href="#"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-                              {{ request()->routeIs('history.sls') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                        History SLS
-                    </a>
-                </div>
-            </div>
+            {{-- History --}}
+            <a href="{{ route('history.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                    {{ request()->routeIs('history.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                History
+            </a>
 
             {{-- DATA MASTER --}}
             <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Data Master</p>

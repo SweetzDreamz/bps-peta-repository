@@ -6,6 +6,7 @@ use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\SketsaController;
+use App\Http\Controllers\HistoryController;
 
 Route::middleware(['auth'])->group(function () {
     // Pengguna
@@ -34,6 +35,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/sketsa/{peta}',    [SketsaController::class, 'update'])->name('sketsa.update');
     Route::delete('/sketsa/{peta}', [SketsaController::class, 'destroy'])->name('sketsa.destroy');
     Route::post('/sketsa/{peta}/download', [SketsaController::class, 'download'])->name('sketsa.download');
+
+    // History
+    Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
+    Route::post('/history/{transaksi}/kembalikan', [HistoryController::class, 'kembalikan'])->name('history.kembalikan');
+
+    //History batal
+    Route::delete('/history/{transaksi}/batalkan', [HistoryController::class, 'batalkan'])->name('history.batalkan');
 
     // AJAX
     Route::get('/api/desa-by-kec',      [SketsaController::class, 'getDesaByKec'])->name('api.desa');

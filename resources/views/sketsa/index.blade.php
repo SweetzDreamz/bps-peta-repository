@@ -252,7 +252,7 @@
 
                     {{-- Aksi --}}
                     <td class="px-4 py-3 align-top">
-                        <div class="flex flex-col gap-1.5 items-center">
+                        <div class="flex flex-row gap-1.5 items-center justify-center">
 
                             {{-- Download --}}
                             <button onclick="openDownloadModal({{ $item->id }}, 'download')"
