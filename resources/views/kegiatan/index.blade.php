@@ -55,11 +55,11 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-100">
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-16">No</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-12">No</th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Kegiatan</th>
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-32">Tahun</th>
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Ditambahkan</th>
-                    <th class="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-32">Aksi</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Tanggal Mulai</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">Tanggal Selesai</th>
+                    <th class="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -77,13 +77,11 @@
                             <span class="font-medium text-gray-800 kegiatan-nama">{{ $item->nama_kegiatan }}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {{ $item->tahun }}
-                        </span>
+                    <td class="px-6 py-4 text-gray-600">
+                        {{ $item->tanggal_mulai->format('d M Y') }}
                     </td>
-                    <td class="px-6 py-4 text-gray-500 text-sm">
-                        {{ $item->created_at->format('d M Y') }}
+                    <td class="px-6 py-4 text-gray-600">
+                        {{ $item->tanggal_selesai->format('d M Y') }}
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-center gap-2">
@@ -108,7 +106,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">
                         <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -159,20 +157,28 @@
                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                            placeholder="Contoh: Sensus Penduduk"/>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">
-                        Tahun <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" name="tahun" required
-                           value="{{ old('tahun', date('Y')) }}"
-                           min="2000" max="{{ date('Y') + 1 }}"
-                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="Contoh: 2025"/>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Tanggal Mulai <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_mulai" required
+                               value="{{ old('tanggal_mulai') }}"
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Tanggal Selesai <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_selesai" required
+                               value="{{ old('tanggal_selesai') }}"
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
                 <button type="button" onclick="closeTambahModal()"
-                        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
                     Batal
                 </button>
                 <button type="submit"
@@ -206,18 +212,26 @@
                     <input type="text" name="nama_kegiatan" id="edit_nama" required
                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">
-                        Tahun <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" name="tahun" id="edit_tahun" required
-                           min="2000" max="{{ date('Y') + 1 }}"
-                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Tanggal Mulai <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_mulai" id="edit_tanggal_mulai" required
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Tanggal Selesai <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_selesai" id="edit_tanggal_selesai" required
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
                 <button type="button" onclick="closeEditModal()"
-                        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
                     Batal
                 </button>
                 <button type="submit"
@@ -246,14 +260,14 @@
         </div>
         <div class="px-6 pb-5 flex gap-3">
             <button onclick="closeHapusModal()"
-                    class="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    class="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
                 Batal
             </button>
             <form id="formHapus" method="POST" class="flex-1">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                        class="w-full px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                        class="w-full px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
                     Ya, Hapus
                 </button>
             </form>
@@ -263,7 +277,6 @@
 
 {{-- Scripts --}}
 <script>
-// Search
 document.getElementById('searchInput').addEventListener('keyup', function() {
     const keyword = this.value.toLowerCase();
     document.querySelectorAll('.kegiatan-row').forEach(row => {
@@ -272,7 +285,6 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
     });
 });
 
-// Modal Tambah
 function openTambahModal() {
     document.getElementById('modalTambah').classList.remove('hidden');
     document.getElementById('modalTambah').classList.add('flex');
@@ -282,11 +294,11 @@ function closeTambahModal() {
     document.getElementById('modalTambah').classList.remove('flex');
 }
 
-// Modal Edit
 function openEditModal(item) {
-    document.getElementById('edit_nama').value  = item.nama_kegiatan;
-    document.getElementById('edit_tahun').value = item.tahun;
-    document.getElementById('formEdit').action  = '/kegiatan/' + item.id;
+    document.getElementById('edit_nama').value            = item.nama_kegiatan;
+    document.getElementById('edit_tanggal_mulai').value   = item.tanggal_mulai;
+    document.getElementById('edit_tanggal_selesai').value = item.tanggal_selesai;
+    document.getElementById('formEdit').action            = '/kegiatan/' + item.id;
     document.getElementById('modalEdit').classList.remove('hidden');
     document.getElementById('modalEdit').classList.add('flex');
 }
@@ -295,7 +307,6 @@ function closeEditModal() {
     document.getElementById('modalEdit').classList.remove('flex');
 }
 
-// Modal Hapus
 function openHapusModal(id, nama) {
     document.getElementById('hapus_nama').textContent = nama + '?';
     document.getElementById('formHapus').action = '/kegiatan/' + id;
@@ -307,7 +318,6 @@ function closeHapusModal() {
     document.getElementById('modalHapus').classList.remove('flex');
 }
 
-// Tutup modal klik luar
 ['modalTambah', 'modalEdit', 'modalHapus'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === this) {
@@ -317,7 +327,6 @@ function closeHapusModal() {
     });
 });
 
-// Buka modal otomatis jika ada error
 @if($errors->any())
     openTambahModal();
 @endif

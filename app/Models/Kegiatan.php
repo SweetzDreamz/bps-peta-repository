@@ -10,16 +10,20 @@ class Kegiatan extends Model
 
     protected $fillable = [
         'nama_kegiatan',
-        'tahun',
+        'tanggal_mulai',
+        'tanggal_selesai',
     ];
 
-    // Satu kegiatan bisa dipakai banyak peta
+    protected $casts = [
+        'tanggal_mulai'   => 'date',
+        'tanggal_selesai' => 'date',
+    ];
+
     public function peta()
     {
         return $this->hasMany(Peta::class, 'kegiatan_id');
     }
 
-    // Satu kegiatan bisa ada di banyak transaksi
     public function transaksiPeta()
     {
         return $this->hasMany(TransaksiPeta::class, 'kegiatan_id');

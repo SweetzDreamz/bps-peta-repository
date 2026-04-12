@@ -232,7 +232,10 @@
                     <td class="px-4 py-3 align-top">
                         <div class="text-xs">
                             <p class="text-gray-800 font-medium">{{ $item->kegiatan->nama_kegiatan ?? '-' }}</p>
-                            <p class="text-gray-500 mt-0.5">{{ $item->kegiatan->tahun ?? '-' }}</p>
+                            <p class="text-gray-500 mt-0.5">
+                                {{ $item->kegiatan->tanggal_mulai->format('d M Y') ?? '-' }} s/d
+                                {{ $item->kegiatan->tanggal_selesai->format('d M Y') ?? '-' }}
+                            </p>
                         </div>
                     </td>
 
@@ -282,18 +285,24 @@
                     <td class="px-4 py-3 align-top">
                         <div class="flex items-center gap-1.5">
 
-                    {{-- Lihat file kembali --}}
+                    {{-- Lihat file kembali — supervisor saja --}}
                     @if($item->file_kembali)
-                    <a href="{{ Storage::url($item->file_kembali) }}" target="_blank"
-                    title="Lihat File Dikembalikan"
-                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    </a>
+                        @if(auth()->user()->isSupervisor())
+                        @php
+                            $fileKembaliUrl = route('file.peta', ['path' => $item->file_kembali]);
+                            $fileKembaliExt = pathinfo($item->file_kembali, PATHINFO_EXTENSION);
+                        @endphp
+                        <button onclick="previewFileKembali('{{ $fileKembaliUrl }}', '{{ $fileKembaliExt }}')"
+                                title="Lihat File Dikembalikan"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                        @endif
                     @endif
 
                     {{-- Pinjaman milik sendiri dan masih dipinjam --}}
@@ -324,8 +333,20 @@
                     {{-- Pinjaman milik orang lain dan masih dipinjam --}}
                     @elseif($item->status === 'dipinjam' && $item->user_id !== auth()->id())
 
-                        {{-- Tombol batalkan (supervisor melihat pinjaman operator lain) --}}
+                        {{-- Supervisor bisa kembalikan dan batalkan pinjaman operator --}}
                         @if(auth()->user()->isSupervisor())
+
+                        {{-- Tombol kembalikan --}}
+                        <button onclick="openKembalikanModal({{ $item->id }})"
+                                title="Kembalikan Peta"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                            </svg>
+                        </button>
+
+                        {{-- Tombol batalkan --}}
                         <button onclick="openBatalkanModal({{ $item->id }})"
                                 title="Batalkan Peminjaman"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -334,6 +355,7 @@
                                     d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
+
                         @endif
 
                     @endif
@@ -370,6 +392,30 @@
         <p class="text-xs text-gray-500">Menampilkan {{ $history->total() }} transaksi</p>
     </div>
     @endif
+</div>
+
+{{-- ===== MODAL PREVIEW FILE KEMBALI ===== --}}
+<div id="modalPreviewKembali"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-80"
+     onclick="closePreviewKembali()">
+    <div class="relative max-w-4xl max-h-screen p-4" onclick="event.stopPropagation()">
+
+        {{-- Overlay transparan blokir klik kanan --}}
+        <div class="absolute inset-4 z-10"
+             oncontextmenu="return false;"
+             ondragstart="return false;">
+        </div>
+
+        {{-- Konten gambar --}}
+        <div id="previewKembaliKonten"></div>
+
+        <button onclick="closePreviewKembali()"
+                class="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white text-gray-800 flex items-center justify-center hover:bg-gray-100">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
 </div>
 
 {{-- MODAL KEMBALIKAN --}}
@@ -473,8 +519,8 @@ function closeBatalkanModal() {
     document.getElementById('modalBatalkan').classList.remove('flex');
 }
 
-// Tutup modal klik luar
-['modalKembalikan', 'modalBatalkan'].forEach(id => {
+
+['modalKembalikan', 'modalBatalkan', 'modalPreviewKembali'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', function(e) {
         if (e.target === this) {
@@ -512,6 +558,42 @@ function filterDesaChange(kodeKec) {
                 select.innerHTML += `<option value="${d.kode_desa}">${d.nama_desa}</option>`;
             });
         });
+}
+
+// Preview file kembali — modal dengan proteksi
+function previewFileKembali(url, ext) {
+    const konten = document.getElementById('previewKembaliKonten');
+    const extLower = ext.toLowerCase();
+
+    if (['jpg', 'jpeg', 'png'].includes(extLower)) {
+        konten.innerHTML = `
+            <img src="${url}"
+                 alt="File Dikembalikan"
+                 class="max-w-full max-h-screen object-contain rounded-lg select-none"
+                 oncontextmenu="return false;"
+                 ondragstart="return false;"/>
+        `;
+    } else if (extLower === 'pdf') {
+        konten.innerHTML = `
+            <div class="bg-white rounded-lg p-6 text-center">
+                <svg class="w-16 h-16 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-gray-700 font-medium mb-1">File PDF</p>
+                <p class="text-gray-400 text-sm">File ini berformat PDF dan tidak bisa dipratinjau langsung.</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('modalPreviewKembali').classList.remove('hidden');
+    document.getElementById('modalPreviewKembali').classList.add('flex');
+}
+
+function closePreviewKembali() {
+    document.getElementById('modalPreviewKembali').classList.add('hidden');
+    document.getElementById('modalPreviewKembali').classList.remove('flex');
+    document.getElementById('previewKembaliKonten').innerHTML = '';
 }
 
 

@@ -59,7 +59,7 @@ class HistoryController extends Controller
         }
 
         $history   = $query->paginate(15)->withQueryString();
-        $kegiatan  = Kegiatan::orderBy('tahun', 'desc')->get();
+        $kegiatan = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
         $kecamatan = Wilayah::select('kode_kec', 'nama_kec')->distinct()->orderBy('nama_kec')->get();
 
         // Stats

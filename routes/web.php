@@ -46,6 +46,27 @@ Route::middleware(['auth'])->group(function () {
     // AJAX
     Route::get('/api/desa-by-kec',      [SketsaController::class, 'getDesaByKec'])->name('api.desa');
     Route::get('/api/sls-by-wilayah',   [SketsaController::class, 'getSlsByWilayah'])->name('api.sls');
+
+    Route::get('/file/peta/{path}', function ($path) {
+    if (!auth()->check()) {
+        abort(403);
+    }
+
+    $fullPath = storage_path('app/public/' . $path);
+
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+
+    $mimeType = mime_content_type($fullPath);
+
+    return response()->file($fullPath, [
+        'Content-Type'           => $mimeType,
+        'Content-Disposition'    => 'inline',
+        'Cache-Control'          => 'no-store, no-cache',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->where('path', '.*')->middleware('auth')->name('file.peta');
 });
 
 Route::get('/', function () {

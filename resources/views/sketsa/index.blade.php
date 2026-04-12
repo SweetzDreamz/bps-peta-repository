@@ -123,7 +123,7 @@
                 <option value="">-- Semua --</option>
                 @foreach($kegiatan as $k)
                     <option value="{{ $k->id }}" {{ request('kegiatan_id') == $k->id ? 'selected' : '' }}>
-                        {{ $k->nama_kegiatan }} ({{ $k->tahun }})
+                        {{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})
                     </option>
                 @endforeach
             </select>
@@ -235,15 +235,17 @@
                             <p class="text-gray-500">KEGIATAN :
                                 <span class="text-gray-800 font-medium">{{ $item->kegiatan->nama_kegiatan ?? '-' }}</span>
                             </p>
-                            <p class="text-gray-500">TAHUN :
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $item->tahun }}
+                            <p class="text-gray-500">PERIODE :
+                                <span class="text-gray-800 font-medium">
+                                    {{ $item->kegiatan->tanggal_mulai->format('d M Y') ?? '-' }}
+                                    s/d
+                                    {{ $item->kegiatan->tanggal_selesai->format('d M Y') ?? '-' }}
                                 </span>
                             </p>
                             <p class="text-gray-500 mt-1">DIUPLOAD :
                                 <span class="text-gray-600">{{ $item->user->name ?? '-' }}</span>
                             </p>
-                            <p class="text-gray-500">TGL :
+                            <p class="text-gray-500">TGL UPLOAD :
                                 <span class="text-gray-600">{{ $item->created_at->format('d M Y') }}</span>
                             </p>
                         </div>
@@ -366,7 +368,7 @@
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">-- Pilih Kegiatan --</option>
                     @foreach($kegiatan as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tahun }})</option>
+                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
                     @endforeach
                 </select>
                 <p class="text-xs text-gray-400 mt-2">
@@ -407,7 +409,7 @@
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">-- Pilih Kegiatan --</option>
                     @foreach($kegiatan as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tahun }})</option>
+                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
                     @endforeach
                 </select>
             </div>
@@ -498,7 +500,7 @@
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">-- Pilih Kegiatan --</option>
                         @foreach($kegiatan as $k)
-                            <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tahun }})</option>
+                            <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -584,7 +586,7 @@
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">-- Pilih Kegiatan --</option>
                         @foreach($kegiatan as $k)
-                            <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tahun }})</option>
+                            <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
                         @endforeach
                     </select>
                 </div>

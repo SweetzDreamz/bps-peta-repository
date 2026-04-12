@@ -42,7 +42,7 @@ class SketsaController extends Controller
 
         $peta       = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
         $wilayah    = Wilayah::orderBy('kode_desa')->get();
-        $kegiatan   = Kegiatan::orderBy('tahun', 'desc')->get();
+        $kegiatan = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
         $kecamatan  = Wilayah::select('kode_kec', 'nama_kec')->distinct()->orderBy('nama_kec')->get();
         $slsList    = $jenis === 'SLS' ? Sls::with('wilayah')->orderBy('nama_sls')->get() : collect();
 
