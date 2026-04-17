@@ -86,7 +86,6 @@
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 <option value="WA" {{ request('jenis_peta') === 'WA' ? 'selected' : '' }}>WA</option>
-                <option value="WB" {{ request('jenis_peta') === 'WB' ? 'selected' : '' }}>WB</option>
                 <option value="SLS" {{ request('jenis_peta') === 'SLS' ? 'selected' : '' }}>SLS</option>
             </select>
         </div>
@@ -197,7 +196,7 @@
                     <td class="px-4 py-3 align-top">
                         @php $jenis = $item->peta->jenis_peta ?? '-'; @endphp
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
-                            {{ $jenis === 'WA' ? 'bg-blue-100 text-blue-800' : ($jenis === 'WB' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800') }}">
+                            {{ $jenis === 'WA' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                             {{ $jenis }}
                         </span>
                     </td>

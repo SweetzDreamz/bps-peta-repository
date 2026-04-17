@@ -50,7 +50,6 @@ class SketsaController extends Controller
     }
 
     public function wa(Request $request)  { return $this->index($request, 'WA'); }
-    public function wb(Request $request)  { return $this->index($request, 'WB'); }
     public function sls(Request $request) { return $this->index($request, 'SLS'); }
 
     // =====================
@@ -59,7 +58,7 @@ class SketsaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_peta'   => 'required|in:WA,WB,SLS',
+            'jenis_peta'   => 'required|in:WA,SLS',
             'wilayah_id'   => 'required|exists:wilayah,id',
             'sls_id'       => 'nullable|exists:sls,id',
             'kegiatan_id'  => 'required|exists:kegiatan,id',
@@ -145,14 +144,14 @@ class SketsaController extends Controller
     public function download(Request $request, Peta $peta)
     {
         $request->validate([
-            'aksi'        => 'required|in:download,print',
-            'kegiatan_id' => 'required|exists:kegiatan,id',
+            'aksi' => 'required|in:download,print',
         ]);
 
+        // Ambil kegiatan_id langsung dari peta
         TransaksiPeta::create([
             'peta_id'     => $peta->id,
             'user_id'     => auth()->id(),
-            'kegiatan_id' => $request->kegiatan_id,
+            'kegiatan_id' => $peta->kegiatan_id,
             'tanggal'     => now()->toDateString(),
             'status'      => 'dipinjam',
         ]);

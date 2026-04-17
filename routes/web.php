@@ -29,7 +29,6 @@ Route::middleware(['auth'])->group(function () {
 
      // Sketsa
     Route::get('/sketsa/wa',  [SketsaController::class, 'wa'])->name('sketsa.wa');
-    Route::get('/sketsa/wb',  [SketsaController::class, 'wb'])->name('sketsa.wb');
     Route::get('/sketsa/sls', [SketsaController::class, 'sls'])->name('sketsa.sls');
     Route::post('/sketsa',    [SketsaController::class, 'store'])->name('sketsa.store');
     Route::put('/sketsa/{peta}',    [SketsaController::class, 'update'])->name('sketsa.update');

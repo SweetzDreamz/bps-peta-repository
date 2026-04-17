@@ -26,16 +26,11 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <div class="flex items-center gap-3 mb-1">
-            {{-- Tab WA / WB / SLS --}}
+            {{-- Tab WA / SLS --}}
             <a href="{{ route('sketsa.wa') }}"
                class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
                       {{ $jenis === 'WA' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
                 WA
-            </a>
-            <a href="{{ route('sketsa.wb') }}"
-               class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-                      {{ $jenis === 'WB' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
-                WB
             </a>
             <a href="{{ route('sketsa.sls') }}"
                class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
@@ -46,7 +41,6 @@
         <h3 class="text-xl font-bold text-gray-800">Management Sketsa — {{ $jenis }}</h3>
         <p class="text-sm text-gray-500 mt-1">
             @if($jenis === 'WA') Sketsa Wilayah Administrasi
-            @elseif($jenis === 'WB') Sketsa Wilayah Blok Sensus
             @else Sketsa Satuan Lingkungan Setempat
             @endif
         </p>
@@ -88,16 +82,6 @@
                 <option value="">-- Semua --</option>
             </select>
         </div>
-
-        {{-- Filter Blok Sensus (khusus WB) --}}
-        @if($jenis === 'WB')
-        <div class="flex-1 min-w-36">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Kode Blok</label>
-            <input type="text" name="kode_blok" value="{{ request('kode_blok') }}"
-                   placeholder="Contoh: 001"
-                   class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-        </div>
-        @endif
 
         {{-- Filter SLS (khusus SLS) --}}
         @if($jenis === 'SLS')
@@ -209,11 +193,6 @@
                                     [{{ $item->wilayah->kode_desa ?? '-' }}] {{ $item->wilayah->nama_desa ?? '-' }}
                                 </span>
                             </p>
-                            @if($jenis === 'WB' && $item->wilayah->kode_blok)
-                            <p class="text-gray-500">BLOK :
-                                <span class="text-gray-800 font-medium font-mono">{{ $item->wilayah->kode_blok }}</span>
-                            </p>
-                            @endif
                             @if($jenis === 'SLS' && $item->sls)
                             <p class="text-gray-500">SLS :
                                 <span class="text-gray-800 font-medium">
@@ -256,18 +235,8 @@
                     <td class="px-4 py-3 align-top">
                         <div class="flex flex-row gap-1.5 items-center justify-center">
 
-                            {{-- Download --}}
-                            <button onclick="openDownloadModal({{ $item->id }}, 'download')"
-                                    title="Download"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                </svg>
-                            </button>
-
                             {{-- Print --}}
-                            <button onclick="openPrintModal({{ $item->id }}, '{{ Storage::url($item->path_file) }}', '{{ pathinfo($item->path_file, PATHINFO_EXTENSION) }}')"
+                            <button onclick="printSketsa({{ $item->id }}, '{{ route('file.peta', ['path' => $item->path_file]) }}', '{{ pathinfo($item->path_file, PATHINFO_EXTENSION) }}')"
                                     title="Print"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,94 +312,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
-    </div>
-</div>
-
-{{-- ===== MODAL DOWNLOAD/PRINT ===== --}}
-<div id="modalDownload" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-800" id="downloadModalTitle">Download Sketsa</h3>
-            <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        <form method="POST" id="formDownload">
-            @csrf
-            <input type="hidden" name="aksi" id="input_aksi" value="download"/>
-            <div class="px-6 py-4">
-                <label class="block text-xs font-medium text-gray-600 mb-1">
-                    Pilih Kegiatan <span class="text-red-500">*</span>
-                </label>
-                <select name="kegiatan_id" required
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Pilih Kegiatan --</option>
-                    @foreach($kegiatan as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-2">
-                    Aksi ini akan tercatat di riwayat transaksi.
-                </p>
-            </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onclick="closeDownloadModal()"
-                        class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    Batal
-                </button>
-                <button type="submit" id="btnDownloadSubmit"
-                        class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
-                    Download
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ===== MODAL PRINT ===== --}}
-<div id="modalPrint" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-800">Print Sketsa</h3>
-            <button onclick="closePrintModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        <div class="px-6 py-4 space-y-4">
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">
-                    Pilih Kegiatan <span class="text-red-500">*</span>
-                </label>
-                <select id="print_kegiatan_id" required
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Pilih Kegiatan --</option>
-                    @foreach($kegiatan as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})</option>
-                    @endforeach
-                </select>
-            </div>
-            <p class="text-xs text-gray-400">
-                Pilih kegiatan terlebih dahulu. Aksi print ini akan tercatat di riwayat transaksi.
-            </p>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-            <button type="button" onclick="closePrintModal()"
-                    class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
-                Batal
-            </button>
-            <button type="button" onclick="submitPrint()"
-                    class="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                </svg>
-                Print Sekarang
-            </button>
-        </div>
     </div>
 </div>
 
@@ -674,96 +555,126 @@ function closePreview() {
     document.getElementById('modalPreview').classList.remove('flex');
 }
 
-// ===== MODAL DOWNLOAD =====
-function openDownloadModal(petaId, aksi) {
-    document.getElementById('input_aksi').value = aksi;
-    document.getElementById('formDownload').action = '/sketsa/' + petaId + '/download';
-    document.getElementById('downloadModalTitle').textContent = 'Download Sketsa';
-    document.getElementById('btnDownloadSubmit').textContent = 'Download';
-    document.getElementById('modalDownload').classList.remove('hidden');
-    document.getElementById('modalDownload').classList.add('flex');
-}
-function closeDownloadModal() {
-    document.getElementById('modalDownload').classList.add('hidden');
-    document.getElementById('modalDownload').classList.remove('flex');
-}
+// ===== PRINT SKETSA =====
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
 
-// ===== MODAL PRINT =====
-function openPrintModal(petaId, fileUrl, fileExt) {
-    currentPrintPetaId = petaId;
-    currentPrintUrl    = fileUrl;
-    currentPrintExt    = fileExt;
-    document.getElementById('print_kegiatan_id').value = '';
-    document.getElementById('modalPrint').classList.remove('hidden');
-    document.getElementById('modalPrint').classList.add('flex');
-}
-function closePrintModal() {
-    document.getElementById('modalPrint').classList.add('hidden');
-    document.getElementById('modalPrint').classList.remove('flex');
-}
-function submitPrint() {
-    const kegiatanId = document.getElementById('print_kegiatan_id').value;
-    if (!kegiatanId) {
-        alert('Pilih kegiatan terlebih dahulu.');
-        return;
-    }
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-    // Catat transaksi via fetch
-    fetch('/sketsa/' + currentPrintPetaId + '/download', {
+function printSketsa(petaId, fileUrl, fileExt) {
+    // Catat transaksi dulu
+    fetch('/sketsa/' + petaId + '/download', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
+            'X-CSRF-TOKEN': CSRF_TOKEN,
             'X-Requested-With': 'XMLHttpRequest',
         },
-        body: JSON.stringify({
-            aksi: 'print',
-            kegiatan_id: kegiatanId,
-        })
+        body: JSON.stringify({ aksi: 'print' })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            closePrintModal();
-            // Buka dialog print Windows
-            if (['jpg', 'jpeg', 'png'].includes(currentPrintExt.toLowerCase())) {
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Print Sketsa</title>
-                        <style>
-                            * { margin: 0; padding: 0; box-sizing: border-box; }
-                            body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: white; }
-                            img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                        </style>
-                    </head>
-                    <body>
-                        <img src="${currentPrintUrl}"
-                             onload="window.focus(); window.print();"
-                             onerror="document.body.innerHTML='<p>Gagal memuat gambar</p>';" />
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
-            } else {
-                // PDF — buka di tab baru
-                const printWindow = window.open(currentPrintUrl, '_blank');
-                if (printWindow) {
-                    printWindow.addEventListener('load', () => {
-                        printWindow.focus();
-                        printWindow.print();
-                    });
-                }
-            }
+            printGambar(fileUrl, fileExt);
         }
     })
     .catch(() => {
-        alert('Gagal mencatat transaksi. Silakan coba lagi.');
+        // Tetap print meski transaksi gagal
+        printGambar(fileUrl, fileExt);
     });
+}
+
+function printGambar(fileUrl, fileExt) {
+    const ext = fileExt.toLowerCase();
+
+    if (['jpg', 'jpeg', 'png'].includes(ext)) {
+        // Buat iframe tersembunyi untuk print tanpa buka tab baru
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-9999px';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Sketsa</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        background: white;
+                    }
+                    img {
+                        max-width: 100%;
+                        max-height: 100vh;
+                        object-fit: contain;
+                        -webkit-user-drag: none;
+                        user-select: none;
+                        pointer-events: none;
+                    }
+                    @media print {
+                        body { margin: 0; }
+                        img { width: 100%; height: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="${fileUrl}"
+                     onload="window.focus(); window.print();"
+                     oncontextmenu="return false;"
+                     ondragstart="return false;" />
+            </body>
+            </html>
+        `);
+        doc.close();
+
+        // Hapus iframe setelah selesai print
+        iframe.contentWindow.onafterprint = function() {
+            document.body.removeChild(iframe);
+        };
+
+        // Fallback hapus iframe setelah 30 detik
+        setTimeout(() => {
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+        }, 30000);
+
+    } else if (ext === 'pdf') {
+        // PDF tetap pakai iframe tersembunyi
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-9999px';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.style.border = 'none';
+        iframe.src = fileUrl;
+        document.body.appendChild(iframe);
+
+        iframe.onload = function() {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch(e) {
+                // Fallback jika iframe PDF tidak bisa diprint langsung
+                window.open(fileUrl, '_blank');
+            }
+        };
+
+        setTimeout(() => {
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+        }, 30000);
+    }
 }
 
 @if(auth()->user()->isSupervisor())

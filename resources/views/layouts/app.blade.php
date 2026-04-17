@@ -7,6 +7,18 @@
     <title>{{ config('app.name', 'BPS Kota Bogor') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+    /* Sembunyikan iframe print */
+    iframe.print-frame {
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 0;
+        height: 0;
+        border: none;
+    }
+</style>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -47,7 +59,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
-                Management Sketsa
+                Sketsa
             </a>
 
             {{-- History --}}
