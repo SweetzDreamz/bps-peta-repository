@@ -40,9 +40,9 @@ class HistoryController extends Controller
         }
 
         // Filter desa
-        if ($request->filled('kode_desa')) {
+        if ($request->filled('kode_des')) {
             $query->whereHas('peta.wilayah', fn($q) =>
-                $q->where('kode_desa', $request->kode_desa));
+                $q->where('kode_des', $request->kode_des));
         }
 
         // Filter kegiatan
@@ -60,7 +60,11 @@ class HistoryController extends Controller
 
         $history   = $query->paginate(15)->withQueryString();
         $kegiatan = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
-        $kecamatan = Wilayah::select('kode_kec', 'nama_kec')->distinct()->orderBy('nama_kec')->get();
+        $kecamatan = Wilayah::select('kode_kec', 'nama_kec')
+                    ->distinct()
+                    ->whereNotNull('kode_kec')
+                    ->orderBy('nama_kec')
+                    ->get();
 
         // Stats
         $totalDipinjam     = TransaksiPeta::when($user->isOperator(), fn($q) => $q->where('user_id', $user->id))

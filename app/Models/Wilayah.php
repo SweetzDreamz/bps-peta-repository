@@ -9,35 +9,50 @@ class Wilayah extends Model
     protected $table = 'wilayah';
 
     protected $fillable = [
-        'kode_prop',
-        'kode_kab',
-        'kode_kec',
-        'kode_desa',
-        'kode_blok',
-        'nama_prop',
-        'nama_kab',
-        'nama_kec',
-        'nama_desa',
+        'id_subsls', 'nama_sls', 'nama_ketua', 'jenis',
+        'kode_prop', 'kode_kab', 'kode_kec', 'kode_des',
+        'kode_sls', 'kode_subsls', 'klas',
+        'nama_prop', 'nama_kab', 'nama_kec', 'nama_des',
+        'kk', 'btt', 'bttk', 'bku', 'bbtt_nonusaha',
+        'usaha', 'muatan', 'status', 'asal',
+        'wilayah_asal_ids', 'induk_id',
     ];
 
-    // Satu wilayah bisa punya banyak SLS
-    public function sls()
+    protected $casts = [
+        'wilayah_asal_ids' => 'array',
+    ];
+
+    // Relasi ke wilayah induk (hasil gabung/pecah)
+    public function induk()
     {
-        return $this->hasMany(Sls::class, 'wilayah_id');
+        return $this->belongsTo(Wilayah::class, 'induk_id');
     }
 
-    // Satu wilayah bisa punya banyak peta
+    // Wilayah turunan (hasil gabung/pecah dari wilayah ini)
+    public function turunan()
+    {
+        return $this->hasMany(Wilayah::class, 'induk_id');
+    }
+
+    // Wilayah asal dari ids yang tersimpan
+    public function wilayahAsal()
+    {
+        if (!$this->wilayah_asal_ids) return collect();
+        return Wilayah::whereIn('id', $this->wilayah_asal_ids)->get();
+    }
+
+    public function isAktif(): bool
+    {
+        return $this->status === 'aktif';
+    }
+
     public function peta()
     {
         return $this->hasMany(Peta::class, 'wilayah_id');
     }
 
-    // Helper untuk menampilkan nama lengkap wilayah
-    public function getNamaLengkapAttribute(): string
+    public function sls()
     {
-        if ($this->kode_blok) {
-            return "{$this->nama_desa} - Blok {$this->kode_blok}";
-        }
-        return "{$this->nama_kec} - {$this->nama_desa}";
+        return $this->hasMany(Sls::class, 'wilayah_id');
     }
 }

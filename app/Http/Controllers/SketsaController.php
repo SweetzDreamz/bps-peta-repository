@@ -18,35 +18,53 @@ class SketsaController extends Controller
     private function index(Request $request, string $jenis)
     {
         $query = Peta::with(['wilayah', 'sls', 'kegiatan', 'user'])
-                     ->where('jenis_peta', $jenis);
+                    ->where('jenis_peta', $jenis);
 
-        // Filter wilayah
+        // Default hanya tampilkan peta dari wilayah aktif
+        if (!$request->filled('status_wilayah')) {
+            $query->whereHas('wilayah', fn($q) => $q->where('status', 'aktif'));
+        } elseif ($request->status_wilayah !== 'semua') {
+            $query->whereHas('wilayah', fn($q) =>
+                $q->where('status', $request->status_wilayah));
+        }
+
+        // Filter kecamatan
         if ($request->filled('kode_kec')) {
             $query->whereHas('wilayah', fn($q) =>
                 $q->where('kode_kec', $request->kode_kec));
         }
-        if ($request->filled('kode_desa')) {
+
+        // Filter desa
+        if ($request->filled('kode_des')) {
             $query->whereHas('wilayah', fn($q) =>
-                $q->where('kode_desa', $request->kode_desa));
+                $q->where('kode_des', $request->kode_des));
         }
-        if ($jenis === 'WB' && $request->filled('kode_blok')) {
-            $query->whereHas('wilayah', fn($q) =>
-                $q->where('kode_blok', $request->kode_blok));
-        }
+
+        // Filter SLS (khusus SLS)
         if ($jenis === 'SLS' && $request->filled('sls_id')) {
             $query->where('sls_id', $request->sls_id);
         }
+
+        // Filter kegiatan
         if ($request->filled('kegiatan_id')) {
             $query->where('kegiatan_id', $request->kegiatan_id);
         }
 
-        $peta       = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-        $wilayah    = Wilayah::orderBy('kode_desa')->get();
-        $kegiatan = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
-        $kecamatan  = Wilayah::select('kode_kec', 'nama_kec')->distinct()->orderBy('nama_kec')->get();
-        $slsList    = $jenis === 'SLS' ? Sls::with('wilayah')->orderBy('nama_sls')->get() : collect();
+        $peta      = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $wilayah   = Wilayah::orderBy('nama_des')->orderBy('nama_sls')->get();
+        $kegiatan  = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
+        $kecamatan = Wilayah::select('kode_kec', 'nama_kec')
+                            ->distinct()
+                            ->whereNotNull('kode_kec')
+                            ->orderBy('nama_kec')
+                            ->get();
+        $slsList   = $jenis === 'SLS'
+                    ? Sls::with('wilayah')->orderBy('nama_sls')->get()
+                    : collect();
 
-        return view('sketsa.index', compact('peta', 'wilayah', 'kegiatan', 'kecamatan', 'slsList', 'jenis'));
+        return view('sketsa.index', compact(
+            'peta', 'wilayah', 'kegiatan', 'kecamatan', 'slsList', 'jenis'
+        ));
     }
 
     public function wa(Request $request)  { return $this->index($request, 'WA'); }
@@ -166,21 +184,20 @@ class SketsaController extends Controller
         return response()->download($filePath, $fileName);
     }
 
-    // =====================
+
     // AJAX - Get desa by kec
-    // =====================
     public function getDesaByKec(Request $request)
     {
         $desa = Wilayah::where('kode_kec', $request->kode_kec)
-                       ->select('id', 'kode_desa', 'nama_desa', 'kode_blok')
-                       ->orderBy('nama_desa')
-                       ->get();
+                    ->select('kode_des', 'nama_des')
+                    ->distinct()
+                    ->whereNotNull('kode_des')
+                    ->orderBy('nama_des')
+                    ->get();
         return response()->json($desa);
     }
 
-    // =====================
     // AJAX - Get SLS by wilayah
-    // =====================
     public function getSlsByWilayah(Request $request)
     {
         $sls = Sls::where('wilayah_id', $request->wilayah_id)
@@ -189,4 +206,15 @@ class SketsaController extends Controller
                   ->get();
         return response()->json($sls);
     }
+
+    // AJAX - Get SLS by desa
+    public function getSlsByDes(Request $request)
+{
+    $sls = Wilayah::where('kode_des', $request->kode_des)
+                  ->select('id', 'kode_sls', 'kode_subsls', 'nama_sls', 'status')
+                  ->orderBy('kode_sls')
+                  ->orderBy('nama_sls')
+                  ->get();
+    return response()->json($sls);
+}
 }

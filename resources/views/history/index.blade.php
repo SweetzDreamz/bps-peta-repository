@@ -107,7 +107,7 @@
         {{-- Desa --}}
         <div class="min-w-40">
             <label class="block text-xs font-medium text-gray-500 mb-1">Desa/Kelurahan</label>
-            <select name="kode_desa" id="filter_desa"
+            <select name="kode_des" id="filter_desa"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
             </select>
@@ -206,19 +206,15 @@
                         @if($item->peta && $item->peta->wilayah)
                         <div class="space-y-0.5 text-xs">
                             <p class="text-gray-500">KECAMATAN :
-                                <span class="text-gray-800 font-medium">{{ $item->peta->wilayah->nama_kec }}</span>
+                                <span class="text-gray-800 font-medium">{{ $item->peta->wilayah->nama_kec ?? '-' }}</span>
                             </p>
                             <p class="text-gray-500">DESA :
-                                <span class="text-gray-800 font-medium">{{ $item->peta->wilayah->nama_desa }}</span>
+                                <span class="text-gray-800 font-medium">{{ $item->peta->wilayah->nama_des ?? '-' }}</span>
                             </p>
-                            @if($jenis === 'WB' && $item->peta->wilayah->kode_blok)
-                            <p class="text-gray-500">BLOK :
-                                <span class="text-gray-800 font-mono font-medium">{{ $item->peta->wilayah->kode_blok }}</span>
-                            </p>
-                            @endif
-                            @if($jenis === 'SLS' && $item->peta->sls)
+                            {{-- SLS hanya untuk peta SLS --}}
+                            @if(($item->peta->jenis_peta ?? '') === 'SLS')
                             <p class="text-gray-500">SLS :
-                                <span class="text-gray-800 font-medium">{{ $item->peta->sls->nama_sls }}</span>
+                                <span class="text-gray-800 font-medium">{{ $item->peta->wilayah->nama_sls ?? '-' }}</span>
                             </p>
                             @endif
                         </div>
@@ -554,7 +550,7 @@ function filterDesaChange(kodeKec) {
         .then(data => {
             select.innerHTML = '<option value="">-- Semua --</option>';
             data.forEach(d => {
-                select.innerHTML += `<option value="${d.kode_desa}">${d.nama_desa}</option>`;
+                select.innerHTML += `<option value="${d.kode_des}">${d.nama_des} — ${d.nama_sls}</option>`;
             });
         });
 }

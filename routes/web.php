@@ -22,10 +22,15 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/kegiatan/{kegiatan}', [KegiatanController::class, 'destroy'])->name('kegiatan.destroy');
 
      // Wilayah
-    Route::get('/wilayah', [WilayahController::class, 'index'])->name('wilayah.index');
-    Route::post('/wilayah', [WilayahController::class, 'store'])->name('wilayah.store');
-    Route::put('/wilayah/{wilayah}', [WilayahController::class, 'update'])->name('wilayah.update');
-    Route::delete('/wilayah/{wilayah}', [WilayahController::class, 'destroy'])->name('wilayah.destroy');
+        Route::get('/wilayah', [WilayahController::class, 'index'])->name('wilayah.index');
+        Route::get('/wilayah/{wilayah}', [WilayahController::class, 'show'])->name('wilayah.show');
+        Route::put('/wilayah/{wilayah}', [WilayahController::class, 'update'])->name('wilayah.update');
+        Route::delete('/wilayah/{wilayah}', [WilayahController::class, 'destroy'])->name('wilayah.destroy');
+        Route::post('/wilayah/import', [WilayahController::class, 'import'])->name('wilayah.import');
+        Route::post('/wilayah/gabung', [WilayahController::class, 'gabung'])->name('wilayah.gabung');
+        Route::post('/wilayah/{wilayah}/pecah', [WilayahController::class, 'pecah'])->name('wilayah.pecah');
+        Route::post('/wilayah/{wilayah}/status-asal', [WilayahController::class, 'updateStatusAsal'])->name('wilayah.status-asal');
+    });
 
      // Sketsa
     Route::get('/sketsa/wa',  [SketsaController::class, 'wa'])->name('sketsa.wa');
@@ -34,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/sketsa/{peta}',    [SketsaController::class, 'update'])->name('sketsa.update');
     Route::delete('/sketsa/{peta}', [SketsaController::class, 'destroy'])->name('sketsa.destroy');
     Route::post('/sketsa/{peta}/download', [SketsaController::class, 'download'])->name('sketsa.download');
+    
 
     // History
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
@@ -45,6 +51,12 @@ Route::middleware(['auth'])->group(function () {
     // AJAX
     Route::get('/api/desa-by-kec',      [SketsaController::class, 'getDesaByKec'])->name('api.desa');
     Route::get('/api/sls-by-wilayah',   [SketsaController::class, 'getSlsByWilayah'])->name('api.sls');
+    Route::get('/api/sls-by-des', [SketsaController::class, 'getSlsByDes'])->name('api.sls.by.des');
+
+    // PILIHAN
+    Route::post('/wilayah/pilihan/toggle', [WilayahController::class, 'togglePilihan'])->name('wilayah.pilihan.toggle');
+    Route::post('/wilayah/pilihan/clear', [WilayahController::class, 'clearPilihan'])->name('wilayah.pilihan.clear');
+    Route::get('/wilayah/pilihan/list', [WilayahController::class, 'getPilihan'])->name('wilayah.pilihan.list');
 
     Route::get('/file/peta/{path}', function ($path) {
     if (!auth()->check()) {
@@ -66,7 +78,7 @@ Route::middleware(['auth'])->group(function () {
         'X-Content-Type-Options' => 'nosniff',
     ]);
 })->where('path', '.*')->middleware('auth')->name('file.peta');
-});
+
 
 Route::get('/', function () {
     return view('welcome');

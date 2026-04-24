@@ -77,24 +77,20 @@
         {{-- Filter Desa --}}
         <div class="flex-1 min-w-36">
             <label class="block text-xs font-medium text-gray-500 mb-1">Desa/Kelurahan</label>
-            <select name="kode_desa" id="filter_desa"
+            <select name="kode_des" id="filter_desa"
+                    @if($jenis === 'SLS') onchange="filterSlsChange(this.value)" @endif
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
             </select>
         </div>
 
-        {{-- Filter SLS (khusus SLS) --}}
+        {{-- Filter SLS — hanya untuk jenis SLS --}}
         @if($jenis === 'SLS')
         <div class="flex-1 min-w-36">
             <label class="block text-xs font-medium text-gray-500 mb-1">SLS</label>
-            <select name="sls_id"
+            <select name="wilayah_id" id="filter_sls"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
-                @foreach($slsList as $sls)
-                    <option value="{{ $sls->id }}" {{ request('sls_id') == $sls->id ? 'selected' : '' }}>
-                        {{ $sls->nama_sls }} ({{ $sls->wilayah->nama_desa ?? '-' }})
-                    </option>
-                @endforeach
             </select>
         </div>
         @endif
@@ -110,6 +106,17 @@
                         {{ $k->nama_kegiatan }} ({{ $k->tanggal_mulai->format('Y') }})
                     </option>
                 @endforeach
+            </select>
+        </div>
+
+        {{-- Filter Status Wilayah --}}
+        <div class="min-w-32">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Status Wilayah</label>
+            <select name="status_wilayah"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Aktif saja</option>
+                <option value="nonaktif" {{ request('status_wilayah') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+                <option value="semua" {{ request('status_wilayah') === 'semua' ? 'selected' : '' }}>Semua</option>
             </select>
         </div>
 
@@ -172,40 +179,42 @@
 
                     {{-- Informasi Wilayah --}}
                     <td class="px-4 py-3 align-top">
+                        @if($item->wilayah)
                         <div class="space-y-0.5 text-xs">
                             <p class="text-gray-500">PROVINSI :
-                                <span class="text-gray-800 font-medium">
-                                    [{{ $item->wilayah->kode_prop ?? '-' }}] {{ $item->wilayah->nama_prop ?? '-' }}
-                                </span>
+                                <span class="text-gray-800 font-medium">{{ $item->wilayah->nama_prop ?? '-' }}</span>
                             </p>
                             <p class="text-gray-500">KAB/KOTA :
-                                <span class="text-gray-800 font-medium">
-                                    [{{ $item->wilayah->kode_kab ?? '-' }}] {{ $item->wilayah->nama_kab ?? '-' }}
-                                </span>
+                                <span class="text-gray-800 font-medium">{{ $item->wilayah->nama_kab ?? '-' }}</span>
                             </p>
                             <p class="text-gray-500">KECAMATAN :
-                                <span class="text-gray-800 font-medium">
-                                    [{{ $item->wilayah->kode_kec ?? '-' }}] {{ $item->wilayah->nama_kec ?? '-' }}
-                                </span>
+                                <span class="text-gray-800 font-medium">{{ $item->wilayah->nama_kec ?? '-' }}</span>
                             </p>
                             <p class="text-gray-500">DESA :
-                                <span class="text-gray-800 font-medium">
-                                    [{{ $item->wilayah->kode_desa ?? '-' }}] {{ $item->wilayah->nama_desa ?? '-' }}
-                                </span>
+                                <span class="text-gray-800 font-medium">{{ $item->wilayah->nama_des ?? '-' }}</span>
                             </p>
-                            @if($jenis === 'SLS' && $item->sls)
+                            {{-- SLS hanya untuk jenis SLS --}}
+                            @if($jenis === 'SLS')
                             <p class="text-gray-500">SLS :
-                                <span class="text-gray-800 font-medium">
-                                    [{{ $item->sls->kode_sls }}] {{ $item->sls->nama_sls }}
-                                </span>
-                            </p>
-                            @if($item->sls->kode_sub_sls)
-                            <p class="text-gray-500">SUB SLS :
-                                <span class="text-gray-800 font-medium font-mono">{{ $item->sls->kode_sub_sls }}</span>
+                                <span class="text-gray-800 font-medium">{{ $item->wilayah->nama_sls ?? '-' }}</span>
                             </p>
                             @endif
-                            @endif
+                            {{-- Badge status wilayah --}}
+                            <div class="pt-1">
+                                @if(($item->wilayah->status ?? 'aktif') === 'aktif')
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                                        Wilayah Aktif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
+                                        Wilayah Nonaktif
+                                    </span>
+                                @endif
+                            </div>
                         </div>
+                        @else
+                        <span class="text-gray-400 text-xs">Data tidak tersedia</span>
+                        @endif
                     </td>
 
                     {{-- Informasi Kegiatan --}}
@@ -341,38 +350,41 @@
             @endif
             <div class="px-6 py-4 space-y-4">
 
-                {{-- Pilih Kecamatan --}}
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Kecamatan <span class="text-red-500">*</span></label>
-                    <select id="tambah_kec" onchange="loadDesaTambah(this.value)"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih Kecamatan --</option>
-                        @foreach($kecamatan as $kec)
-                            <option value="{{ $kec->kode_kec }}">{{ $kec->nama_kec }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    {{-- Pilih Kecamatan --}}
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Kecamatan <span class="text-red-500">*</span></label>
+                        <select id="tambah_kec" onchange="loadDesaTambah(this.value)"
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Kecamatan --</option>
+                            @foreach($kecamatan as $kec)
+                                <option value="{{ $kec->kode_kec }}">{{ $kec->nama_kec }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                {{-- Pilih Desa → wilayah_id --}}
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Desa/Kelurahan <span class="text-red-500">*</span></label>
-                    <select name="wilayah_id" id="tambah_desa" required
-                            @if($jenis === 'SLS') onchange="loadSlsTambah(this.value)" @endif
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih Desa --</option>
-                    </select>
-                </div>
+                    {{-- Pilih Desa --}}
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Desa/Kelurahan <span class="text-red-500">*</span>
+                        </label>
+                        <select id="tambah_desa"
+                                onchange="{{ $jenis === 'SLS' ? 'loadSlsTambah(this.value)' : '' }}"
+                                @if($jenis === 'WA') name="wilayah_id" required @endif
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Desa --</option>
+                        </select>
+                    </div>
 
-                {{-- Pilih SLS (khusus SLS) --}}
-                @if($jenis === 'SLS')
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">SLS <span class="text-red-500">*</span></label>
-                    <select name="sls_id" id="tambah_sls" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih SLS --</option>
-                    </select>
-                </div>
-                @endif
+                    {{-- Pilih SLS — hanya untuk jenis SLS --}}
+                    @if($jenis === 'SLS')
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">SLS <span class="text-red-500">*</span></label>
+                        <select name="wilayah_id" id="tambah_sls_wilayah" required
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih SLS --</option>
+                        </select>
+                    </div>
+                    @endif
 
                 {{-- Kegiatan --}}
                 <div>
@@ -419,6 +431,7 @@
 </div>
 
 {{-- ===== MODAL EDIT ===== --}}
+@if(auth()->user()->isSupervisor())
 <div id="modalEdit" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-xl mx-4 max-h-screen overflow-y-auto">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
@@ -434,33 +447,19 @@
             @method('PUT')
             <div class="px-6 py-4 space-y-4">
 
+                {{-- Info Wilayah (read only) --}}
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Wilayah <span class="text-red-500">*</span></label>
-                    <select name="wilayah_id" id="edit_wilayah_id" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih Wilayah --</option>
-                        @foreach($wilayah as $w)
-                            <option value="{{ $w->id }}">
-                                [{{ $w->kode_desa }}] {{ $w->nama_desa }} - {{ $w->nama_kec }}
-                                @if($w->kode_blok) (Blok: {{ $w->kode_blok }}) @endif
-                            </option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                        @if($jenis === 'WA') Desa/Kelurahan @else SLS @endif
+                    </label>
+                    <div id="edit_wilayah_display"
+                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700 min-h-9">
+                    </div>
+                    <input type="hidden" name="wilayah_id" id="edit_wilayah_id"/>
+                    <p class="text-xs text-gray-400 mt-1">Wilayah tidak dapat diubah setelah peta dibuat.</p>
                 </div>
 
-                @if($jenis === 'SLS')
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">SLS</label>
-                    <select name="sls_id" id="edit_sls_id"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih SLS --</option>
-                        @foreach($slsList as $sls)
-                            <option value="{{ $sls->id }}">[{{ $sls->kode_sls }}] {{ $sls->nama_sls }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif
-
+                {{-- Kegiatan --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Kegiatan <span class="text-red-500">*</span></label>
                     <select name="kegiatan_id" id="edit_kegiatan_id" required
@@ -472,15 +471,15 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Tahun <span class="text-red-500">*</span></label>
-                        <input type="number" name="tahun" id="edit_tahun" required
-                            min="2000" max="{{ date('Y') + 1 }}"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                    </div>
+                {{-- Tahun --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Tahun <span class="text-red-500">*</span></label>
+                    <input type="number" name="tahun" id="edit_tahun" required
+                           min="2000" max="{{ date('Y') + 1 }}"
+                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                 </div>
 
+                {{-- Ganti File --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Ganti File Peta</label>
                     <input type="file" name="file_peta" accept=".jpg,.jpeg,.png,.pdf"
@@ -502,6 +501,7 @@
         </form>
     </div>
 </div>
+@endif
 
 {{-- ===== MODAL HAPUS ===== --}}
 <div id="modalHapus" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
@@ -540,11 +540,11 @@
 {{-- Scripts --}}
 <script>
 const JENIS = '{{ $jenis }}';
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
 let currentPrintPetaId = null;
 let currentPrintUrl    = '';
 let currentPrintExt    = '';
 
-// ===== PREVIEW GAMBAR =====
 function previewGambar(url) {
     document.getElementById('previewImg').src = url;
     document.getElementById('modalPreview').classList.remove('hidden');
@@ -555,11 +555,7 @@ function closePreview() {
     document.getElementById('modalPreview').classList.remove('flex');
 }
 
-// ===== PRINT SKETSA =====
-const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
-
 function printSketsa(petaId, fileUrl, fileExt) {
-    // Catat transaksi dulu
     fetch('/sketsa/' + petaId + '/download', {
         method: 'POST',
         headers: {
@@ -570,115 +566,160 @@ function printSketsa(petaId, fileUrl, fileExt) {
         body: JSON.stringify({ aksi: 'print' })
     })
     .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            printGambar(fileUrl, fileExt);
-        }
-    })
-    .catch(() => {
-        // Tetap print meski transaksi gagal
-        printGambar(fileUrl, fileExt);
-    });
+    .then(data => { if (data.success) printGambar(fileUrl, fileExt); })
+    .catch(() => printGambar(fileUrl, fileExt));
 }
 
 function printGambar(fileUrl, fileExt) {
     const ext = fileExt.toLowerCase();
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document;
 
-    if (['jpg', 'jpeg', 'png'].includes(ext)) {
-        // Buat iframe tersembunyi untuk print tanpa buka tab baru
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.top = '-9999px';
-        iframe.style.left = '-9999px';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = 'none';
-        document.body.appendChild(iframe);
-
-        const doc = iframe.contentWindow.document;
+    if (['jpg','jpeg','png'].includes(ext)) {
         doc.open();
-        doc.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Print Sketsa</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        background: white;
-                    }
-                    img {
-                        max-width: 100%;
-                        max-height: 100vh;
-                        object-fit: contain;
-                        -webkit-user-drag: none;
-                        user-select: none;
-                        pointer-events: none;
-                    }
-                    @media print {
-                        body { margin: 0; }
-                        img { width: 100%; height: auto; }
-                    }
-                </style>
-            </head>
-            <body>
-                <img src="${fileUrl}"
-                     onload="window.focus(); window.print();"
-                     oncontextmenu="return false;"
-                     ondragstart="return false;" />
-            </body>
-            </html>
-        `);
+        doc.write(`<!DOCTYPE html><html><head><title>Print</title>
+            <style>*{margin:0;padding:0;}body{display:flex;justify-content:center;align-items:center;min-height:100vh;}
+            img{max-width:100%;max-height:100vh;object-fit:contain;pointer-events:none;}</style>
+            </head><body><img src="${fileUrl}"
+            onload="window.focus();window.print();"
+            oncontextmenu="return false;" ondragstart="return false;"/></body></html>`);
         doc.close();
-
-        // Hapus iframe setelah selesai print
-        iframe.contentWindow.onafterprint = function() {
-            document.body.removeChild(iframe);
-        };
-
-        // Fallback hapus iframe setelah 30 detik
-        setTimeout(() => {
-            if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-            }
-        }, 30000);
-
-    } else if (ext === 'pdf') {
-        // PDF tetap pakai iframe tersembunyi
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.top = '-9999px';
-        iframe.style.left = '-9999px';
-        iframe.style.width = '1px';
-        iframe.style.height = '1px';
-        iframe.style.border = 'none';
+    } else {
         iframe.src = fileUrl;
-        document.body.appendChild(iframe);
-
-        iframe.onload = function() {
-            try {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            } catch(e) {
-                // Fallback jika iframe PDF tidak bisa diprint langsung
-                window.open(fileUrl, '_blank');
-            }
-        };
-
-        setTimeout(() => {
-            if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-            }
-        }, 30000);
+        iframe.onload = () => { try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e) {} };
     }
+
+    setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 30000);
+    iframe.contentWindow.onafterprint = () => { if (document.body.contains(iframe)) document.body.removeChild(iframe); };
+}
+
+function loadDesaTambah(kodeKec) {
+    const selectDesa = document.getElementById('tambah_desa');
+    const selectSls  = document.getElementById('tambah_sls_wilayah');
+    selectDesa.innerHTML = '<option value="">Memuat...</option>';
+    if (selectSls) selectSls.innerHTML = '<option value="">-- Pilih SLS --</option>';
+    if (!kodeKec) { selectDesa.innerHTML = '<option value="">-- Pilih Desa --</option>'; return; }
+    fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
+        .then(r => r.json())
+        .then(data => {
+            selectDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
+            data.forEach(d => {
+                selectDesa.innerHTML += `<option value="${d.kode_des}">${d.nama_des}</option>`;
+            });
+        });
+}
+
+function loadSlsTambah(kodeDes) {
+    if (JENIS !== 'SLS') return;
+    const select = document.getElementById('tambah_sls_wilayah');
+    if (!select) return;
+    select.innerHTML = '<option value="">Memuat...</option>';
+    if (!kodeDes) { select.innerHTML = '<option value="">-- Pilih SLS --</option>'; return; }
+    fetch(`/api/sls-by-des?kode_des=${kodeDes}`)
+        .then(r => r.json())
+        .then(data => {
+            select.innerHTML = '<option value="">-- Pilih SLS --</option>';
+            data.forEach(d => {
+                const statusTag = d.status === 'nonaktif' ? ' (Nonaktif)' : '';
+                const kodeSls   = d.kode_sls || '-';
+                select.innerHTML += `<option value="${d.id}">[${kodeSls}] ${d.nama_sls}${statusTag}</option>`;
+            });
+        });
+}
+
+function filterDesaChange(kodeKec) {
+    const selectDesa = document.getElementById('filter_desa');
+    const selectSls  = document.getElementById('filter_sls');
+    selectDesa.innerHTML = '<option value="">Memuat...</option>';
+    if (selectSls) selectSls.innerHTML = '<option value="">-- Semua --</option>';
+    if (!kodeKec) { selectDesa.innerHTML = '<option value="">-- Semua --</option>'; return; }
+    fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
+        .then(r => r.json())
+        .then(data => {
+            selectDesa.innerHTML = '<option value="">-- Semua --</option>';
+            data.forEach(d => {
+                selectDesa.innerHTML += `<option value="${d.kode_des}">${d.nama_des}</option>`;
+            });
+        });
+}
+
+function filterSlsChange(kodeDes) {
+    if (JENIS !== 'SLS') return;
+    const select = document.getElementById('filter_sls');
+    if (!select) return;
+    select.innerHTML = '<option value="">Memuat...</option>';
+    if (!kodeDes) { select.innerHTML = '<option value="">-- Semua --</option>'; return; }
+    fetch(`/api/sls-by-des?kode_des=${kodeDes}`)
+        .then(r => r.json())
+        .then(data => {
+            select.innerHTML = '<option value="">-- Semua --</option>';
+            data.forEach(d => {
+                select.innerHTML += `<option value="${d.id}">${d.nama_sls}</option>`;
+            });
+        });
+}
+
+const filterKec = document.getElementById('filter_kec');
+if (filterKec && filterKec.value) {
+    const kodeDesAktif = '{{ request("kode_des") }}';
+    const wilayahAktif = '{{ request("wilayah_id") }}';
+    fetch(`/api/desa-by-kec?kode_kec=${filterKec.value}`)
+        .then(r => r.json())
+        .then(data => {
+            const selectDesa = document.getElementById('filter_desa');
+            selectDesa.innerHTML = '<option value="">-- Semua --</option>';
+            data.forEach(d => {
+                const sel = d.kode_des == kodeDesAktif ? 'selected' : '';
+                selectDesa.innerHTML += `<option value="${d.kode_des}" ${sel}>${d.nama_des}</option>`;
+            });
+            if (kodeDesAktif && JENIS === 'SLS') {
+                fetch(`/api/sls-by-des?kode_des=${kodeDesAktif}`)
+                    .then(r => r.json())
+                    .then(slsData => {
+                        const selectSls = document.getElementById('filter_sls');
+                        if (!selectSls) return;
+                        selectSls.innerHTML = '<option value="">-- Semua --</option>';
+                        slsData.forEach(s => {
+                            const sel = s.id == wilayahAktif ? 'selected' : '';
+                            selectSls.innerHTML += `<option value="${s.id}" ${sel}>${s.nama_sls}</option>`;
+                        });
+                    });
+            }
+        });
+}
+
+function openEditModal(item) {
+    const display = document.getElementById('edit_wilayah_display');
+    if (display && item.wilayah) {
+        if (JENIS === 'WA') {
+            const kodeDes = item.wilayah.kode_des || '-';
+            const namaDes = item.wilayah.nama_des || '-';
+            display.textContent = '[' + kodeDes + '] ' + namaDes;
+        } else {
+            const namaDes = item.wilayah.nama_des || '-';
+            const namaSls = item.wilayah.nama_sls || '-';
+            display.textContent = namaDes + ' — ' + namaSls;
+        }
+    } else if (display) {
+        display.textContent = '-';
+    }
+
+    document.getElementById('edit_wilayah_id').value  = item.wilayah_id;
+    document.getElementById('edit_kegiatan_id').value = item.kegiatan_id;
+    document.getElementById('edit_tahun').value       = item.tahun;
+    document.getElementById('formEdit').action        = '/sketsa/' + item.id;
+    document.getElementById('modalEdit').classList.remove('hidden');
+    document.getElementById('modalEdit').classList.add('flex');
+}
+
+function closeEditModal() {
+    document.getElementById('modalEdit').classList.add('hidden');
+    document.getElementById('modalEdit').classList.remove('flex');
 }
 
 @if(auth()->user()->isSupervisor())
-// ===== MODAL TAMBAH =====
 function openTambahModal() {
     document.getElementById('modalTambah').classList.remove('hidden');
     document.getElementById('modalTambah').classList.add('flex');
@@ -688,62 +729,6 @@ function closeTambahModal() {
     document.getElementById('modalTambah').classList.remove('flex');
 }
 
-// Load desa saat pilih kecamatan (form tambah)
-function loadDesaTambah(kodeKec) {
-    const select = document.getElementById('tambah_desa');
-    select.innerHTML = '<option value="">Memuat...</option>';
-    if (!kodeKec) { select.innerHTML = '<option value="">-- Pilih Desa --</option>'; return; }
-    fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
-        .then(r => r.json())
-        .then(data => {
-            select.innerHTML = '<option value="">-- Pilih Desa --</option>';
-            data.forEach(d => {
-                const label = d.kode_blok
-                    ? `[${d.kode_desa}] ${d.nama_desa} (Blok: ${d.kode_blok})`
-                    : `[${d.kode_desa}] ${d.nama_desa}`;
-                select.innerHTML += `<option value="${d.id}">${label}</option>`;
-            });
-        });
-}
-
-// Load SLS saat pilih desa (khusus SLS)
-function loadSlsTambah(wilayahId) {
-    if (JENIS !== 'SLS') return;
-    const select = document.getElementById('tambah_sls');
-    if (!select) return;
-    select.innerHTML = '<option value="">Memuat...</option>';
-    if (!wilayahId) { select.innerHTML = '<option value="">-- Pilih SLS --</option>'; return; }
-    fetch(`/api/sls-by-wilayah?wilayah_id=${wilayahId}`)
-        .then(r => r.json())
-        .then(data => {
-            select.innerHTML = '<option value="">-- Pilih SLS --</option>';
-            data.forEach(s => {
-                const label = s.kode_sub_sls
-                    ? `[${s.kode_sls}] ${s.nama_sls} (Sub: ${s.kode_sub_sls})`
-                    : `[${s.kode_sls}] ${s.nama_sls}`;
-                select.innerHTML += `<option value="${s.id}">${label}</option>`;
-            });
-        });
-}
-
-// ===== MODAL EDIT =====
-function openEditModal(item) {
-    document.getElementById('edit_wilayah_id').value  = item.wilayah_id;
-    document.getElementById('edit_kegiatan_id').value = item.kegiatan_id;
-    document.getElementById('edit_tahun').value       = item.tahun;
-    if (JENIS === 'SLS') {
-        document.getElementById('edit_sls_id').value = item.sls_id ?? '';
-    }
-    document.getElementById('formEdit').action = '/sketsa/' + item.id;
-    document.getElementById('modalEdit').classList.remove('hidden');
-    document.getElementById('modalEdit').classList.add('flex');
-}
-function closeEditModal() {
-    document.getElementById('modalEdit').classList.add('hidden');
-    document.getElementById('modalEdit').classList.remove('flex');
-}
-
-// ===== MODAL HAPUS =====
 function openHapusModal(id, nama) {
     document.getElementById('hapus_nama').textContent = nama + '?';
     document.getElementById('formHapus').action = '/sketsa/' + id;
@@ -760,8 +745,7 @@ function closeHapusModal() {
 @endif
 @endif
 
-// Tutup semua modal klik luar
-['modalDownload', 'modalPrint', 'modalPreview', 'modalTambah', 'modalEdit', 'modalHapus'].forEach(id => {
+['modalPreview', 'modalTambah', 'modalEdit', 'modalHapus'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', function(e) {
         if (e.target === this) {
@@ -770,42 +754,6 @@ function closeHapusModal() {
         }
     });
 });
-
-// Filter desa saat load halaman
-const filterKec = document.getElementById('filter_kec');
-if (filterKec && filterKec.value) {
-    const kodeDesaAktif = '{{ request("kode_desa") }}';
-    fetch(`/api/desa-by-kec?kode_kec=${filterKec.value}`)
-        .then(r => r.json())
-        .then(data => {
-            const select = document.getElementById('filter_desa');
-            select.innerHTML = '<option value="">-- Semua --</option>';
-            data.forEach(d => {
-                const label = d.kode_blok
-                    ? `[${d.kode_desa}] ${d.nama_desa} (Blok: ${d.kode_blok})`
-                    : `[${d.kode_desa}] ${d.nama_desa}`;
-                const selected = d.kode_desa === kodeDesaAktif ? 'selected' : '';
-                select.innerHTML += `<option value="${d.kode_desa}" ${selected}>${label}</option>`;
-            });
-        });
-}
-
-function filterDesaChange(kodeKec) {
-    const select = document.getElementById('filter_desa');
-    select.innerHTML = '<option value="">Memuat...</option>';
-    if (!kodeKec) { select.innerHTML = '<option value="">-- Semua --</option>'; return; }
-    fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
-        .then(r => r.json())
-        .then(data => {
-            select.innerHTML = '<option value="">-- Semua --</option>';
-            data.forEach(d => {
-                const label = d.kode_blok
-                    ? `[${d.kode_desa}] ${d.nama_desa} (Blok: ${d.kode_blok})`
-                    : `[${d.kode_desa}] ${d.nama_desa}`;
-                select.innerHTML += `<option value="${d.kode_desa}">${label}</option>`;
-            });
-        });
-}
 </script>
 
 @endsection

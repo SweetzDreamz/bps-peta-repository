@@ -6,9 +6,95 @@
     <title>Login — BPS Kota Bogor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style="background-color: #f1f5f9;">
+    {{-- Background Pattern --}}
+    <div class="absolute inset-0 z-0" style="
+        background-color: #f1f5f9;
+        background-image:
+            radial-gradient(circle at 1px 1px, #cbd5e1 1px, transparent 0);
+        background-size: 32px 32px;
+    "></div>
 
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex w-full max-w-3xl min-h-96">
+    {{-- Decorative shapes --}}
+    <div class="absolute top-0 left-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+        {{-- Lingkaran besar kanan atas --}}
+        <div style="
+            position: absolute;
+            top: -120px;
+            right: -80px;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            border: 40px solid rgba(59, 130, 246, 0.06);
+        "></div>
+
+        {{-- Lingkaran sedang kanan atas --}}
+        <div style="
+            position: absolute;
+            top: 60px;
+            right: 80px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 20px solid rgba(59, 130, 246, 0.05);
+        "></div>
+
+        {{-- Lingkaran besar kiri bawah --}}
+        <div style="
+            position: absolute;
+            bottom: -150px;
+            left: -100px;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 50px solid rgba(59, 130, 246, 0.05);
+        "></div>
+
+        {{-- Kotak dekorasi kanan bawah --}}
+        <div style="
+            position: absolute;
+            bottom: 60px;
+            right: 40px;
+            width: 120px;
+            height: 120px;
+            border: 12px solid rgba(59, 130, 246, 0.07);
+            transform: rotate(45deg);
+        "></div>
+
+        {{-- Garis grid horizontal --}}
+        <svg style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.03;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1e40af" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+        </svg>
+
+        {{-- Titik-titik digital pojok kiri atas --}}
+        <svg style="position:absolute;top:20px;left:20px;opacity:0.08;" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#1e40af">
+                @for($r = 0; $r < 5; $r++)
+                    @for($c = 0; $c < 5; $c++)
+                        <circle cx="{{ $c * 24 + 4 }}" cy="{{ $r * 24 + 4 }}" r="2.5"/>
+                    @endfor
+                @endfor
+            </g>
+        </svg>
+
+        {{-- Titik-titik digital pojok kanan bawah --}}
+        <svg style="position:absolute;bottom:20px;right:20px;opacity:0.08;" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#1e40af">
+                @for($r = 0; $r < 5; $r++)
+                    @for($c = 0; $c < 5; $c++)
+                        <circle cx="{{ $c * 24 + 4 }}" cy="{{ $r * 24 + 4 }}" r="2.5"/>
+                    @endfor
+                @endfor
+            </g>
+        </svg>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex w-full max-w-3xl min-h-96 relative z-10">
 
         {{-- SISI KIRI --}}
         <div class="w-1/2 bg-blue-500 p-10 flex flex-col justify-between relative overflow-hidden">
