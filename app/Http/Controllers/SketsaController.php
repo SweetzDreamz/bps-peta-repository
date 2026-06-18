@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Peta;
 use App\Models\Wilayah;
-use App\Models\Sls;
 use App\Models\Kegiatan;
 use App\Models\TransaksiPeta;
 use Illuminate\Http\Request;
@@ -17,10 +16,9 @@ class SketsaController extends Controller
     // =====================
     private function index(Request $request, string $jenis)
     {
-        $query = Peta::with(['wilayah', 'sls', 'kegiatan', 'user'])
-                    ->where('jenis_peta', $jenis);
+        $query = Peta::with(['wilayah', 'kegiatan', 'user'])
+                     ->where('jenis_peta', $jenis);
 
-        // Default hanya tampilkan peta dari wilayah aktif
         if (!$request->filled('status_wilayah')) {
             $query->whereHas('wilayah', fn($q) => $q->where('status', 'aktif'));
         } elseif ($request->status_wilayah !== 'semua') {
@@ -28,42 +26,34 @@ class SketsaController extends Controller
                 $q->where('status', $request->status_wilayah));
         }
 
-        // Filter kecamatan
         if ($request->filled('kode_kec')) {
             $query->whereHas('wilayah', fn($q) =>
                 $q->where('kode_kec', $request->kode_kec));
         }
 
-        // Filter desa
         if ($request->filled('kode_des')) {
             $query->whereHas('wilayah', fn($q) =>
                 $q->where('kode_des', $request->kode_des));
         }
 
-        // Filter SLS (khusus SLS)
-        if ($jenis === 'SLS' && $request->filled('sls_id')) {
-            $query->where('sls_id', $request->sls_id);
+        if ($request->filled('wilayah_id')) {
+            $query->where('wilayah_id', $request->wilayah_id);
         }
 
-        // Filter kegiatan
         if ($request->filled('kegiatan_id')) {
             $query->where('kegiatan_id', $request->kegiatan_id);
         }
 
         $peta      = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-        $wilayah   = Wilayah::orderBy('nama_des')->orderBy('nama_sls')->get();
         $kegiatan  = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
         $kecamatan = Wilayah::select('kode_kec', 'nama_kec')
                             ->distinct()
                             ->whereNotNull('kode_kec')
-                            ->orderBy('nama_kec')
+                            ->orderByRaw('CAST(kode_kec AS UNSIGNED)')
                             ->get();
-        $slsList   = $jenis === 'SLS'
-                    ? Sls::with('wilayah')->orderBy('nama_sls')->get()
-                    : collect();
 
         return view('sketsa.index', compact(
-            'peta', 'wilayah', 'kegiatan', 'kecamatan', 'slsList', 'jenis'
+            'peta', 'kegiatan', 'kecamatan', 'jenis'
         ));
     }
 
@@ -76,12 +66,11 @@ class SketsaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_peta'   => 'required|in:WA,SLS',
-            'wilayah_id'   => 'required|exists:wilayah,id',
-            'sls_id'       => 'nullable|exists:sls,id',
-            'kegiatan_id'  => 'required|exists:kegiatan,id',
-            'tahun'        => 'required|digits:4',
-            'file_peta'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'jenis_peta'  => 'required|in:WA,SLS',
+            'wilayah_id'  => 'required|exists:wilayah,id',
+            'kegiatan_id' => 'required|exists:kegiatan,id',
+            'tahun'       => 'required|digits:4',
+            'file_peta'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
         ], [
             'wilayah_id.required'  => 'Wilayah wajib dipilih.',
             'kegiatan_id.required' => 'Kegiatan wajib dipilih.',
@@ -91,20 +80,21 @@ class SketsaController extends Controller
             'file_peta.max'        => 'Ukuran file maksimal 10MB.',
         ]);
 
-        $path = $request->file('file_peta')->store('peta/' . strtolower($request->jenis_peta), 'public');
+        $path = $request->file('file_peta')
+                        ->store('peta/' . strtolower($request->jenis_peta), 'public');
 
         Peta::create([
             'jenis_peta'  => $request->jenis_peta,
             'wilayah_id'  => $request->wilayah_id,
-            'sls_id'      => $request->sls_id,
+            'sls_id'      => null,
             'kegiatan_id' => $request->kegiatan_id,
             'tahun'       => $request->tahun,
             'path_file'   => $path,
             'user_id'     => auth()->id(),
         ]);
 
-        $route = 'sketsa.' . strtolower($request->jenis_peta);
-        return redirect()->route($route)->with('success', 'Sketsa peta berhasil ditambahkan.');
+        $route = $request->jenis_peta === 'WA' ? 'peta.wa' : 'peta.sls';
+        return redirect()->route($route)->with('success', 'Peta berhasil ditambahkan.');
     }
 
     // =====================
@@ -113,11 +103,10 @@ class SketsaController extends Controller
     public function update(Request $request, Peta $peta)
     {
         $request->validate([
-            'wilayah_id'   => 'required|exists:wilayah,id',
-            'sls_id'       => 'nullable|exists:sls,id',
-            'kegiatan_id'  => 'required|exists:kegiatan,id',
-            'tahun'        => 'required|digits:4',
-            'file_peta'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'wilayah_id'  => 'required|exists:wilayah,id',
+            'kegiatan_id' => 'required|exists:kegiatan,id',
+            'tahun'       => 'required|digits:4',
+            'file_peta'   => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
         ], [
             'wilayah_id.required'  => 'Wilayah wajib dipilih.',
             'kegiatan_id.required' => 'Kegiatan wajib dipilih.',
@@ -127,20 +116,20 @@ class SketsaController extends Controller
 
         if ($request->hasFile('file_peta')) {
             Storage::disk('public')->delete($peta->path_file);
-            $path = $request->file('file_peta')->store('peta/' . strtolower($peta->jenis_peta), 'public');
+            $path = $request->file('file_peta')
+                            ->store('peta/' . strtolower($peta->jenis_peta), 'public');
             $peta->path_file = $path;
         }
 
         $peta->update([
             'wilayah_id'  => $request->wilayah_id,
-            'sls_id'      => $request->sls_id,
             'kegiatan_id' => $request->kegiatan_id,
             'tahun'       => $request->tahun,
             'path_file'   => $peta->path_file,
         ]);
 
-        $route = 'sketsa.' . strtolower($peta->jenis_peta);
-        return redirect()->route($route)->with('success', 'Sketsa peta berhasil diperbarui.');
+        $route = $peta->jenis_peta === 'WA' ? 'peta.wa' : 'peta.sls';
+        return redirect()->route($route)->with('success', 'Peta berhasil diperbarui.');
     }
 
     // =====================
@@ -152,8 +141,8 @@ class SketsaController extends Controller
         $jenis = $peta->jenis_peta;
         $peta->delete();
 
-        $route = 'sketsa.' . strtolower($jenis);
-        return redirect()->route($route)->with('success', 'Sketsa peta berhasil dihapus.');
+        $route = $jenis === 'WA' ? 'peta.wa' : 'peta.sls';
+        return redirect()->route($route)->with('success', 'Peta berhasil dihapus.');
     }
 
     // =====================
@@ -165,7 +154,6 @@ class SketsaController extends Controller
             'aksi' => 'required|in:download,print',
         ]);
 
-        // Ambil kegiatan_id langsung dari peta
         TransaksiPeta::create([
             'peta_id'     => $peta->id,
             'user_id'     => auth()->id(),
@@ -184,37 +172,55 @@ class SketsaController extends Controller
         return response()->download($filePath, $fileName);
     }
 
-
-    // AJAX - Get desa by kec
+    // =====================
+    // AJAX
+    // =====================
     public function getDesaByKec(Request $request)
     {
         $desa = Wilayah::where('kode_kec', $request->kode_kec)
-                    ->select('kode_des', 'nama_des')
+                    ->select('kode_kec', 'kode_des', 'nama_des')
                     ->distinct()
                     ->whereNotNull('kode_des')
-                    ->orderBy('nama_des')
+                    ->whereNotNull('nama_des')
+                    ->orderBy('kode_des')
                     ->get();
+
         return response()->json($desa);
     }
 
-    // AJAX - Get SLS by wilayah
-    public function getSlsByWilayah(Request $request)
+    public function getSlsByDes(Request $request)
     {
-        $sls = Sls::where('wilayah_id', $request->wilayah_id)
-                  ->select('id', 'kode_sls', 'kode_sub_sls', 'nama_sls')
-                  ->orderBy('kode_sls')
-                  ->get();
-        return response()->json($sls);
+        $query = Wilayah::select('id', 'id_subsls', 'kode_kec', 'kode_des',
+                                'kode_sls', 'kode_subsls', 'nama_sls',
+                                'nama_kec', 'nama_des', 'status')
+                        ->orderBy('kode_sls')
+                        ->orderBy('kode_subsls')
+                        ->orderBy('nama_sls');
+
+        // Filter wajib pakai KOMBINASI kode_kec + kode_des
+        if ($request->filled('kode_kec') && $request->filled('kode_des')) {
+            $query->where('kode_kec', $request->kode_kec)
+                ->where('kode_des', $request->kode_des);
+        } elseif ($request->filled('kode_des')) {
+            $query->where('kode_des', $request->kode_des);
+        }
+
+        if (!$request->filled('semua')) {
+            $query->where('status', 'aktif');
+        }
+
+        return response()->json($query->get());
     }
 
-    // AJAX - Get SLS by desa
-    public function getSlsByDes(Request $request)
-{
-    $sls = Wilayah::where('kode_des', $request->kode_des)
-                  ->select('id', 'kode_sls', 'kode_subsls', 'nama_sls', 'status')
-                  ->orderBy('kode_sls')
-                  ->orderBy('nama_sls')
-                  ->get();
-    return response()->json($sls);
-}
+    public function getAllSls(Request $request)
+    {
+        $sls = Wilayah::select('id', 'id_subsls', 'kode_sls', 'kode_subsls', 'nama_sls', 'nama_des', 'nama_kec', 'status')
+                      ->where('status', 'aktif')
+                      ->orderBy('nama_kec')
+                      ->orderBy('nama_des')
+                      ->orderBy('nama_sls')
+                      ->get();
+
+        return response()->json($sls);
+    }
 }

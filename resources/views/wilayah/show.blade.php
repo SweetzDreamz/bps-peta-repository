@@ -13,6 +13,17 @@
 </div>
 @endif
 
+{{-- Banner perlu edit --}}
+@if($wilayah->perlu_edit)
+<div class="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-lg flex items-center gap-2">
+    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>
+    <span class="text-sm font-medium">Wilayah ini hasil dari proses <strong>{{ $wilayah->asal }}</strong> dan belum diedit. Harap periksa dan lengkapi atribut yang kosong, lalu simpan untuk menghapus penanda ini.</span>
+</div>
+@endif
+
 {{-- Header --}}
 <div class="flex items-center gap-4 mb-6">
     <a href="{{ route('wilayah.index') }}"
@@ -127,7 +138,7 @@
         </div>
 
         {{-- Wilayah Asal (jika hasil gabung/pecah) --}}
-        @if($wilayah->asal !== 'import' && $wilayahAsal->count() > 0)
+        @if($wilayah->asal !== 'import' && count($wilayahAsal) > 0)
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h4 class="text-sm font-semibold text-gray-700 mb-3">
                 Wilayah Asal

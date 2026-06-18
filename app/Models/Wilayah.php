@@ -15,11 +15,12 @@ class Wilayah extends Model
         'nama_prop', 'nama_kab', 'nama_kec', 'nama_des',
         'kk', 'btt', 'bttk', 'bku', 'bbtt_nonusaha',
         'usaha', 'muatan', 'status', 'asal',
-        'wilayah_asal_ids', 'induk_id',
+        'wilayah_asal_ids', 'induk_id', 'perlu_edit',
     ];
 
     protected $casts = [
         'wilayah_asal_ids' => 'array',
+        'perlu_edit'       => 'boolean',
     ];
 
     // Relasi ke wilayah induk (hasil gabung/pecah)
@@ -37,7 +38,7 @@ class Wilayah extends Model
     // Wilayah asal dari ids yang tersimpan
     public function wilayahAsal()
     {
-        if (!$this->wilayah_asal_ids) return collect();
+        if (empty($this->wilayah_asal_ids)) return collect();
         return Wilayah::whereIn('id', $this->wilayah_asal_ids)->get();
     }
 

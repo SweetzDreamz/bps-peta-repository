@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'Sketsa ' . $jenis)
+@section('page-title', 'Peta ' . $jenis)
 
 @section('content')
 
@@ -27,21 +27,21 @@
     <div>
         <div class="flex items-center gap-3 mb-1">
             {{-- Tab WA / SLS --}}
-            <a href="{{ route('sketsa.wa') }}"
+            <a href="{{ route('peta.wa') }}"
                class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
                       {{ $jenis === 'WA' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
                 WA
             </a>
-            <a href="{{ route('sketsa.sls') }}"
+            <a href="{{ route('peta.sls') }}"
                class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
                       {{ $jenis === 'SLS' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
                 SLS
             </a>
         </div>
-        <h3 class="text-xl font-bold text-gray-800">Management Sketsa — {{ $jenis }}</h3>
+        <h3 class="text-xl font-bold text-gray-800">Repositori Peta — {{ $jenis }}</h3>
         <p class="text-sm text-gray-500 mt-1">
-            @if($jenis === 'WA') Sketsa Wilayah Administrasi
-            @else Sketsa Satuan Lingkungan Setempat
+            @if($jenis === 'WA') Peta Wilayah Administrasi
+            @else Peta Satuan Lingkungan Setempat
             @endif
         </p>
     </div>
@@ -51,7 +51,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Tambah Sketsa
+        Tambah Peta
     </button>
     @endif
 </div>
@@ -63,12 +63,12 @@
         {{-- Filter Kecamatan --}}
         <div class="flex-1 min-w-36">
             <label class="block text-xs font-medium text-gray-500 mb-1">Kecamatan</label>
-            <select name="kode_kec" id="filter_kec" onchange="filterDesaChange(this.value)"
+            <select name="kode_kec" id="filter_kec" onchange="filterDesaChange(this.value)" 
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 @foreach($kecamatan as $kec)
                     <option value="{{ $kec->kode_kec }}" {{ request('kode_kec') == $kec->kode_kec ? 'selected' : '' }}>
-                        {{ $kec->nama_kec }}
+                        [{{ str_pad($kec->kode_kec, 3, '0', STR_PAD_LEFT) }}] {{ $kec->nama_kec }}
                     </option>
                 @endforeach
             </select>
@@ -136,15 +136,15 @@
 {{-- Tabel --}}
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-3 border-b border-gray-100 flex items-center justify-between">
-        <p class="text-sm font-semibold text-gray-700">Daftar Sketsa {{ $jenis }}</p>
-        <p class="text-xs text-gray-400">{{ $peta->total() }} sketsa ditemukan</p>
+        <p class="text-sm font-semibold text-gray-700">Daftar Peta {{ $jenis }}</p>
+        <p class="text-xs text-gray-400">{{ $peta->total() }} Peta ditemukan</p>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-100">
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-12">No</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-32">Sketsa</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-32">Peta</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Informasi Wilayah</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Informasi Kegiatan</th>
                     <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-36">Aksi</th>
@@ -157,12 +157,12 @@
                         {{ ($peta->currentPage() - 1) * $peta->perPage() + $index + 1 }}
                     </td>
 
-                    {{-- Thumbnail Sketsa --}}
+                    {{-- Thumbnail Peta --}}
                     <td class="px-4 py-3 align-top">
                         @php $ext = pathinfo($item->path_file, PATHINFO_EXTENSION); @endphp
                         @if(in_array(strtolower($ext), ['jpg','jpeg','png']))
                             <img src="{{ Storage::url($item->path_file) }}"
-                                 alt="Sketsa {{ $jenis }}"
+                                 alt="Peta {{ $jenis }}"
                                  class="w-28 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
                                  onclick="previewGambar('{{ Storage::url($item->path_file) }}')"/>
                         @else
@@ -284,11 +284,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
                                   d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                         </svg>
-                        <p class="text-gray-400 text-sm">Belum ada data sketsa {{ $jenis }}</p>
+                        <p class="text-gray-400 text-sm">Belum ada data peta {{ $jenis }}</p>
                         @if(auth()->user()->isSupervisor())
                         <button onclick="openTambahModal()"
                                 class="mt-3 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Tambah Sketsa Pertama
+                            Tambah Peta Pertama
                         </button>
                         @endif
                     </td>
@@ -302,7 +302,7 @@
     @if($peta->hasPages())
     <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
         <p class="text-xs text-gray-500">
-            Menampilkan {{ $peta->firstItem() }}–{{ $peta->lastItem() }} dari {{ $peta->total() }} sketsa
+            Menampilkan {{ $peta->firstItem() }}–{{ $peta->lastItem() }} dari {{ $peta->total() }} peta
         </p>
         {{ $peta->links() }}
     </div>
@@ -313,7 +313,7 @@
 <div id="modalPreview" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-80"
      onclick="closePreview()">
     <div class="relative max-w-4xl max-h-screen p-4">
-        <img id="previewImg" src="" alt="Preview Sketsa"
+        <img id="previewImg" src="" alt="Preview Peta"
              class="max-w-full max-h-screen object-contain rounded-lg"/>
         <button onclick="closePreview()"
                 class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white text-gray-800 flex items-center justify-center hover:bg-gray-100">
@@ -329,14 +329,14 @@
 <div id="modalTambah" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-xl mx-4 max-h-screen overflow-y-auto">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
-            <h3 class="text-lg font-semibold text-gray-800">Tambah Sketsa {{ $jenis }}</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Tambah Peta {{ $jenis }}</h3>
             <button onclick="closeTambahModal()" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
-        <form method="POST" action="{{ route('sketsa.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('peta.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="jenis_peta" value="{{ $jenis }}"/>
             @if($errors->any())
@@ -352,12 +352,16 @@
 
                     {{-- Pilih Kecamatan --}}
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Kecamatan <span class="text-red-500">*</span></label>
-                        <select id="tambah_kec" onchange="loadDesaTambah(this.value)"
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Kecamatan <span class="text-red-500">*</span>
+                        </label>
+                        <select id="tambah_kec" onchange="loadDesaTambah(this.value)" 
                                 class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">-- Pilih Kecamatan --</option>
                             @foreach($kecamatan as $kec)
-                                <option value="{{ $kec->kode_kec }}">{{ $kec->nama_kec }}</option>
+                                <option value="{{ $kec->kode_kec }}">
+                                    [{{ str_pad($kec->kode_kec, 3, '0', STR_PAD_LEFT) }}] {{ $kec->nama_kec }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -435,7 +439,7 @@
 <div id="modalEdit" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-xl mx-4 max-h-screen overflow-y-auto">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
-            <h3 class="text-lg font-semibold text-gray-800">Edit Sketsa {{ $jenis }}</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Edit Peta {{ $jenis }}</h3>
             <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -513,8 +517,8 @@
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-1">Hapus Sketsa</h3>
-            <p class="text-sm text-gray-500">Apakah kamu yakin ingin menghapus sketsa</p>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">Hapus Peta</h3>
+            <p class="text-sm text-gray-500">Apakah kamu yakin ingin menghapus peta</p>
             <p class="text-sm font-semibold text-gray-800 my-2" id="hapus_nama"></p>
             <p class="text-xs text-red-500">File peta akan ikut terhapus permanen.</p>
         </div>
@@ -556,7 +560,7 @@ function closePreview() {
 }
 
 function printSketsa(petaId, fileUrl, fileExt) {
-    fetch('/sketsa/' + petaId + '/download', {
+    fetch('/peta/' + petaId + '/download', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -595,95 +599,129 @@ function printGambar(fileUrl, fileExt) {
     iframe.contentWindow.onafterprint = () => { if (document.body.contains(iframe)) document.body.removeChild(iframe); };
 }
 
+// ===== LOAD DESA (form tambah) =====
 function loadDesaTambah(kodeKec) {
     const selectDesa = document.getElementById('tambah_desa');
     const selectSls  = document.getElementById('tambah_sls_wilayah');
     selectDesa.innerHTML = '<option value="">Memuat...</option>';
     if (selectSls) selectSls.innerHTML = '<option value="">-- Pilih SLS --</option>';
-    if (!kodeKec) { selectDesa.innerHTML = '<option value="">-- Pilih Desa --</option>'; return; }
+    if (!kodeKec) {
+        selectDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
+        return;
+    }
     fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
         .then(r => r.json())
         .then(data => {
             selectDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
             data.forEach(d => {
-                selectDesa.innerHTML += `<option value="${d.kode_des}">${d.nama_des}</option>`;
+                const kodeDes = d.kode_des ? String(d.kode_des).padStart(3, '0') : '-';
+                selectDesa.innerHTML += `<option value="${d.kode_des}">[${kodeDes}] ${d.nama_des}</option>`;
             });
         });
 }
 
+// ===== LOAD SLS (form tambah — hanya jenis SLS) =====
 function loadSlsTambah(kodeDes) {
     if (JENIS !== 'SLS') return;
-    const select = document.getElementById('tambah_sls_wilayah');
+    const select  = document.getElementById('tambah_sls_wilayah');
+    const kodeKec = document.getElementById('tambah_kec').value;
     if (!select) return;
     select.innerHTML = '<option value="">Memuat...</option>';
-    if (!kodeDes) { select.innerHTML = '<option value="">-- Pilih SLS --</option>'; return; }
-    fetch(`/api/sls-by-des?kode_des=${kodeDes}`)
+    if (!kodeDes) {
+        select.innerHTML = '<option value="">-- Pilih SLS --</option>';
+        return;
+    }
+    fetch(`/api/sls-by-des?kode_kec=${kodeKec}&kode_des=${kodeDes}`)
         .then(r => r.json())
         .then(data => {
             select.innerHTML = '<option value="">-- Pilih SLS --</option>';
+            if (data.length === 0) {
+                select.innerHTML = '<option value="">Tidak ada SLS ditemukan</option>';
+                return;
+            }
             data.forEach(d => {
-                const statusTag = d.status === 'nonaktif' ? ' (Nonaktif)' : '';
-                const kodeSls   = d.kode_sls || '-';
-                select.innerHTML += `<option value="${d.id}">[${kodeSls}] ${d.nama_sls}${statusTag}</option>`;
+                const idSubsls   = d.id_subsls   ? d.id_subsls : '-';
+                const kodeSls    = d.kode_sls    ? String(d.kode_sls).padStart(4, '0')    : '-';
+                const kodeSubsls = d.kode_subsls ? String(d.kode_subsls).padStart(2, '0') : '-';
+                const statusTag  = d.status === 'nonaktif' ? ' (Nonaktif)' : '';
+                select.innerHTML += `<option value="${d.id}">[${idSubsls}] ${d.nama_sls} — ${kodeSls}/${kodeSubsls}${statusTag}</option>`;
             });
         });
 }
 
+// ===== FILTER — desa berubah =====
 function filterDesaChange(kodeKec) {
     const selectDesa = document.getElementById('filter_desa');
     const selectSls  = document.getElementById('filter_sls');
     selectDesa.innerHTML = '<option value="">Memuat...</option>';
     if (selectSls) selectSls.innerHTML = '<option value="">-- Semua --</option>';
-    if (!kodeKec) { selectDesa.innerHTML = '<option value="">-- Semua --</option>'; return; }
+    if (!kodeKec) {
+        selectDesa.innerHTML = '<option value="">-- Semua --</option>';
+        return;
+    }
     fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
         .then(r => r.json())
         .then(data => {
             selectDesa.innerHTML = '<option value="">-- Semua --</option>';
             data.forEach(d => {
-                selectDesa.innerHTML += `<option value="${d.kode_des}">${d.nama_des}</option>`;
+                const kodeDes = d.kode_des ? String(d.kode_des).padStart(3, '0') : '-';
+                selectDesa.innerHTML += `<option value="${d.kode_des}">[${kodeDes}] ${d.nama_des}</option>`;
             });
         });
 }
 
+// ===== FILTER — SLS berubah =====
 function filterSlsChange(kodeDes) {
     if (JENIS !== 'SLS') return;
-    const select = document.getElementById('filter_sls');
+    const select  = document.getElementById('filter_sls');
+    const kodeKec = document.getElementById('filter_kec').value;
     if (!select) return;
     select.innerHTML = '<option value="">Memuat...</option>';
-    if (!kodeDes) { select.innerHTML = '<option value="">-- Semua --</option>'; return; }
-    fetch(`/api/sls-by-des?kode_des=${kodeDes}`)
+    if (!kodeDes) {
+        select.innerHTML = '<option value="">-- Semua --</option>';
+        return;
+    }
+    fetch(`/api/sls-by-des?kode_kec=${kodeKec}&kode_des=${kodeDes}`)
         .then(r => r.json())
         .then(data => {
             select.innerHTML = '<option value="">-- Semua --</option>';
             data.forEach(d => {
-                select.innerHTML += `<option value="${d.id}">${d.nama_sls}</option>`;
+                const idSubsls  = d.id_subsls ? d.id_subsls : '-';
+                const statusTag = d.status === 'nonaktif' ? ' (Nonaktif)' : '';
+                select.innerHTML += `<option value="${d.id}">[${idSubsls}] ${d.nama_sls}${statusTag}</option>`;
             });
         });
 }
 
+// ===== Restore filter saat load halaman =====
 const filterKec = document.getElementById('filter_kec');
 if (filterKec && filterKec.value) {
     const kodeDesAktif = '{{ request("kode_des") }}';
     const wilayahAktif = '{{ request("wilayah_id") }}';
-    fetch(`/api/desa-by-kec?kode_kec=${filterKec.value}`)
+    const kodeKecVal   = filterKec.value;
+
+    fetch(`/api/desa-by-kec?kode_kec=${kodeKecVal}`)
         .then(r => r.json())
         .then(data => {
             const selectDesa = document.getElementById('filter_desa');
             selectDesa.innerHTML = '<option value="">-- Semua --</option>';
             data.forEach(d => {
-                const sel = d.kode_des == kodeDesAktif ? 'selected' : '';
-                selectDesa.innerHTML += `<option value="${d.kode_des}" ${sel}>${d.nama_des}</option>`;
+                const kodeDes = d.kode_des ? String(d.kode_des).padStart(3, '0') : '-';
+                const sel     = d.kode_des == kodeDesAktif ? 'selected' : '';
+                selectDesa.innerHTML += `<option value="${d.kode_des}" ${sel}>[${kodeDes}] ${d.nama_des}</option>`;
             });
+
             if (kodeDesAktif && JENIS === 'SLS') {
-                fetch(`/api/sls-by-des?kode_des=${kodeDesAktif}`)
+                fetch(`/api/sls-by-des?kode_kec=${kodeKecVal}&kode_des=${kodeDesAktif}`)
                     .then(r => r.json())
                     .then(slsData => {
                         const selectSls = document.getElementById('filter_sls');
                         if (!selectSls) return;
                         selectSls.innerHTML = '<option value="">-- Semua --</option>';
                         slsData.forEach(s => {
-                            const sel = s.id == wilayahAktif ? 'selected' : '';
-                            selectSls.innerHTML += `<option value="${s.id}" ${sel}>${s.nama_sls}</option>`;
+                            const idSubsls = s.id_subsls ? s.id_subsls : '-';
+                            const sel      = s.id == wilayahAktif ? 'selected' : '';
+                            selectSls.innerHTML += `<option value="${s.id}" ${sel}>[${idSubsls}] ${s.nama_sls}</option>`;
                         });
                     });
             }
@@ -709,7 +747,7 @@ function openEditModal(item) {
     document.getElementById('edit_wilayah_id').value  = item.wilayah_id;
     document.getElementById('edit_kegiatan_id').value = item.kegiatan_id;
     document.getElementById('edit_tahun').value       = item.tahun;
-    document.getElementById('formEdit').action        = '/sketsa/' + item.id;
+    document.getElementById('formEdit').action        = '/peta/' + item.id;
     document.getElementById('modalEdit').classList.remove('hidden');
     document.getElementById('modalEdit').classList.add('flex');
 }
@@ -731,7 +769,7 @@ function closeTambahModal() {
 
 function openHapusModal(id, nama) {
     document.getElementById('hapus_nama').textContent = nama + '?';
-    document.getElementById('formHapus').action = '/sketsa/' + id;
+    document.getElementById('formHapus').action = '/peta/' + id;
     document.getElementById('modalHapus').classList.remove('hidden');
     document.getElementById('modalHapus').classList.add('flex');
 }

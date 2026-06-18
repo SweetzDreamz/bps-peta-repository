@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'History Peminjaman')
+@section('page-title', 'Riwayat Peminjaman')
 
 @section('content')
 
@@ -25,7 +25,7 @@
 {{-- Header --}}
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h3 class="text-xl font-bold text-gray-800">History Peminjaman Peta</h3>
+        <h3 class="text-xl font-bold text-gray-800">Riwayat Peminjaman Peta</h3>
         <p class="text-sm text-gray-500 mt-1">
             @if(auth()->user()->isSupervisor())
                 Seluruh riwayat peminjaman peta oleh semua operator
@@ -77,7 +77,7 @@
 
 {{-- Filter --}}
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
-    <form method="GET" action="{{ route('history.index') }}" class="flex flex-wrap items-end gap-3">
+    <form method="GET" action="{{ route('riwayat.index') }}" class="flex flex-wrap items-end gap-3">
 
         {{-- Jenis Peta --}}
         <div class="min-w-32">
@@ -85,43 +85,52 @@
             <select name="jenis_peta"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
-                <option value="WA" {{ request('jenis_peta') === 'WA' ? 'selected' : '' }}>WA</option>
+                <option value="WA"  {{ request('jenis_peta') === 'WA'  ? 'selected' : '' }}>WA</option>
                 <option value="SLS" {{ request('jenis_peta') === 'SLS' ? 'selected' : '' }}>SLS</option>
             </select>
         </div>
 
         {{-- Kecamatan --}}
-        <div class="min-w-40">
+        <div class="min-w-44">
             <label class="block text-xs font-medium text-gray-500 mb-1">Kecamatan</label>
-            <select name="kode_kec" id="filter_kec" onchange="filterDesaChange(this.value)"
+            <select name="kode_kec" id="filter_kec_riwayat"
+                    onchange="filterDesaRiwayat(this.value)"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 @foreach($kecamatan as $kec)
-                    <option value="{{ $kec->kode_kec }}" {{ request('kode_kec') == $kec->kode_kec ? 'selected' : '' }}>
-                        {{ $kec->nama_kec }}
+                    <option value="{{ $kec->kode_kec }}"
+                            {{ request('kode_kec') == $kec->kode_kec ? 'selected' : '' }}>
+                        [{{ str_pad($kec->kode_kec, 3, '0', STR_PAD_LEFT) }}] {{ $kec->nama_kec }}
                     </option>
                 @endforeach
             </select>
         </div>
 
         {{-- Desa --}}
-        <div class="min-w-40">
+        <div class="min-w-44">
             <label class="block text-xs font-medium text-gray-500 mb-1">Desa/Kelurahan</label>
-            <select name="kode_des" id="filter_desa"
+            <select name="kode_des" id="filter_des_riwayat"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
+                @foreach($desa as $d)
+                    <option value="{{ $d->kode_des }}"
+                            {{ request('kode_des') == $d->kode_des ? 'selected' : '' }}>
+                        [{{ str_pad($d->kode_des, 3, '0', STR_PAD_LEFT) }}] {{ $d->nama_des }}
+                    </option>
+                @endforeach
             </select>
         </div>
 
         {{-- Kegiatan --}}
-        <div class="min-w-40">
+        <div class="min-w-44">
             <label class="block text-xs font-medium text-gray-500 mb-1">Kegiatan</label>
             <select name="kegiatan_id"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 @foreach($kegiatan as $k)
                     <option value="{{ $k->id }}" {{ request('kegiatan_id') == $k->id ? 'selected' : '' }}>
-                        {{ $k->nama_kegiatan }} ({{ $k->tahun }})
+                        {{ $k->nama_kegiatan }}
+                        ({{ $k->tanggal_mulai ? \Carbon\Carbon::parse($k->tanggal_mulai)->format('Y') : '-' }})
                     </option>
                 @endforeach
             </select>
@@ -133,7 +142,7 @@
             <select name="status"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
-                <option value="dipinjam" {{ request('status') === 'dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                <option value="dipinjam"     {{ request('status') === 'dipinjam'     ? 'selected' : '' }}>Dipinjam</option>
                 <option value="dikembalikan" {{ request('status') === 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
             </select>
         </div>
@@ -155,7 +164,7 @@
                     class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 Filter
             </button>
-            <a href="{{ route('history.index') }}"
+            <a href="{{ route('riwayat.index') }}"
                class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 Reset
             </a>
@@ -494,7 +503,7 @@
 {{-- Scripts --}}
 <script>
 function openKembalikanModal(transaksiId) {
-    document.getElementById('formKembalikan').action = '/history/' + transaksiId + '/kembalikan';
+    document.getElementById('formKembalikan').action = '/riwayat/' + transaksiId + '/kembalikan';
     document.getElementById('modalKembalikan').classList.remove('hidden');
     document.getElementById('modalKembalikan').classList.add('flex');
 }
@@ -505,7 +514,7 @@ function closeKembalikanModal() {
 
 // Modal Batalkan
 function openBatalkanModal(transaksiId) {
-    document.getElementById('formBatalkan').action = '/history/' + transaksiId + '/batalkan';
+    document.getElementById('formBatalkan').action = '/riwayat/' + transaksiId + '/batalkan';
     document.getElementById('modalBatalkan').classList.remove('hidden');
     document.getElementById('modalBatalkan').classList.add('flex');
 }
@@ -541,16 +550,20 @@ if (filterKec && filterKec.value) {
         });
 }
 
-function filterDesaChange(kodeKec) {
-    const select = document.getElementById('filter_desa');
+function filterDesaRiwayat(kodeKec) {
+    const select = document.getElementById('filter_des_riwayat');
     select.innerHTML = '<option value="">Memuat...</option>';
-    if (!kodeKec) { select.innerHTML = '<option value="">-- Semua --</option>'; return; }
+    if (!kodeKec) {
+        select.innerHTML = '<option value="">-- Semua --</option>';
+        return;
+    }
     fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
         .then(r => r.json())
         .then(data => {
             select.innerHTML = '<option value="">-- Semua --</option>';
             data.forEach(d => {
-                select.innerHTML += `<option value="${d.kode_des}">${d.nama_des} — ${d.nama_sls}</option>`;
+                const kode = d.kode_des ? String(d.kode_des).padStart(3, '0') : '-';
+                select.innerHTML += `<option value="${d.kode_des}">[${kode}] ${d.nama_des}</option>`;
             });
         });
 }

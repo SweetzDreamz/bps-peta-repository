@@ -14,128 +14,137 @@ class HistoryController extends Controller
     public function index(Request $request)
     {
         $user  = auth()->user();
-        $query = TransaksiPeta::with(['peta.wilayah', 'peta.sls', 'user', 'kegiatan'])
+        $query = TransaksiPeta::with(['peta.wilayah', 'user', 'kegiatan'])
                               ->orderBy('created_at', 'desc');
 
-        // Operator hanya lihat milik sendiri
         if ($user->isOperator()) {
             $query->where('user_id', $user->id);
         }
 
-        // Filter jenis peta
         if ($request->filled('jenis_peta')) {
             $query->whereHas('peta', fn($q) =>
                 $q->where('jenis_peta', $request->jenis_peta));
         }
 
-        // Filter status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter kecamatan
         if ($request->filled('kode_kec')) {
             $query->whereHas('peta.wilayah', fn($q) =>
                 $q->where('kode_kec', $request->kode_kec));
         }
 
-        // Filter desa
         if ($request->filled('kode_des')) {
             $query->whereHas('peta.wilayah', fn($q) =>
-                $q->where('kode_des', $request->kode_des));
+                $q->where('kode_des', $request->kode_des)
+                  ->where('kode_kec', $request->kode_kec));
         }
 
-        // Filter kegiatan
         if ($request->filled('kegiatan_id')) {
             $query->where('kegiatan_id', $request->kegiatan_id);
         }
 
-        // Filter tanggal
         if ($request->filled('dari')) {
             $query->whereDate('tanggal', '>=', $request->dari);
         }
+
         if ($request->filled('sampai')) {
             $query->whereDate('tanggal', '<=', $request->sampai);
         }
 
-        $history   = $query->paginate(15)->withQueryString();
-        $kegiatan = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
-        $kecamatan = Wilayah::select('kode_kec', 'nama_kec')
-                    ->distinct()
-                    ->whereNotNull('kode_kec')
-                    ->orderBy('nama_kec')
-                    ->get();
+        $history = $query->paginate(15)->withQueryString();
 
-        // Stats
-        $totalDipinjam     = TransaksiPeta::when($user->isOperator(), fn($q) => $q->where('user_id', $user->id))
-                                          ->where('status', 'dipinjam')->count();
-        $totalDikembalikan = TransaksiPeta::when($user->isOperator(), fn($q) => $q->where('user_id', $user->id))
-                                          ->where('status', 'dikembalikan')->count();
-        $totalSemua        = TransaksiPeta::when($user->isOperator(), fn($q) => $q->where('user_id', $user->id))
-                                          ->count();
+
+        $totalDipinjam     = TransaksiPeta::when($user->isOperator(), fn($q) =>
+                                $q->where('user_id', $user->id))
+                                ->where('status', 'dipinjam')->count();
+
+        $totalDikembalikan = TransaksiPeta::when($user->isOperator(), fn($q) =>
+                                $q->where('user_id', $user->id))
+                                ->where('status', 'dikembalikan')->count();
+
+        $totalSemua        = TransaksiPeta::when($user->isOperator(), fn($q) =>
+                                $q->where('user_id', $user->id))
+                                ->count();
+
+        $kegiatan  = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
+
+        $kecamatan = Wilayah::select('kode_kec', 'nama_kec')
+                            ->distinct()
+                            ->whereNotNull('kode_kec')
+                            ->whereNotNull('nama_kec')
+                            ->orderByRaw('CAST(kode_kec AS UNSIGNED)')
+                            ->get();
+
+        $desa = collect();
+        if ($request->filled('kode_kec')) {
+            $desa = Wilayah::select('kode_des', 'nama_des', 'kode_kec')
+                           ->distinct()
+                           ->where('kode_kec', $request->kode_kec)
+                           ->whereNotNull('kode_des')
+                           ->whereNotNull('nama_des')
+                           ->orderBy('kode_des')
+                           ->get();
+        }
 
         return view('history.index', compact(
-            'history', 'kegiatan', 'kecamatan',
+            'history', 'kegiatan', 'kecamatan', 'desa',
             'totalDipinjam', 'totalDikembalikan', 'totalSemua'
         ));
     }
 
     public function kembalikan(Request $request, TransaksiPeta $transaksi)
     {
-        // Pastikan operator hanya bisa kembalikan milik sendiri
         if (auth()->user()->isOperator() && $transaksi->user_id !== auth()->id()) {
-            return redirect()->route('history.index')
-                            ->with('error', 'Akses ditolak.');
+            return redirect()->route('riwayat.index')
+                             ->with('error', 'Akses ditolak.');
         }
 
         $request->validate([
             'file_kembali' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
         ], [
             'file_kembali.required' => 'File peta yang diperbarui wajib diupload.',
-            'file_kembali.mimes'    => 'Format file harus JPG, PNG, atau PDF.',
-            'file_kembali.max'      => 'Ukuran file maksimal 10MB.',
+            'file_kembali.mimes'    => 'Format file tidak didukung. Hanya JPG, PNG, dan PDF yang diizinkan.',
+            'file_kembali.max'      => 'Ukuran file terlalu besar. Maksimal 10MB.',
         ]);
 
         $petaLama  = $transaksi->peta;
         $jenisPeta = strtolower($petaLama->jenis_peta ?? 'wa');
 
-        // Simpan file yang dikembalikan ke folder peta (bukan folder kembali)
         $path = $request->file('file_kembali')
                         ->store("peta/{$jenisPeta}", 'public');
 
-        // Buat entri peta baru dari file yang dikembalikan operator
-        $petaBaru = Peta::create([
+        Peta::create([
             'jenis_peta'  => $petaLama->jenis_peta,
             'wilayah_id'  => $petaLama->wilayah_id,
-            'sls_id'      => $petaLama->sls_id,
+            'sls_id'      => null,
             'kegiatan_id' => $transaksi->kegiatan_id,
             'tahun'       => $petaLama->tahun,
             'path_file'   => $path,
             'user_id'     => auth()->id(),
         ]);
 
-        // Update status transaksi menjadi dikembalikan
         $transaksi->update([
             'status'        => 'dikembalikan',
             'file_kembali'  => $path,
             'waktu_kembali' => now(),
         ]);
 
-        return redirect()->route('history.index')
-                        ->with('success', 'Peta berhasil dikembalikan dan masuk sebagai peta baru di Management Sketsa.');
+        return redirect()->route('riwayat.index')
+                         ->with('success', 'Peta berhasil dikembalikan dan masuk sebagai peta baru.');
     }
 
     public function batalkan(TransaksiPeta $transaksi)
-{
-    // Hanya supervisor yang bisa batalkan
-    if (auth()->user()->isOperator()) {
-        return redirect()->route('history.index')
-                         ->with('error', 'Akses ditolak.');
+    {
+        if (auth()->user()->isOperator()) {
+            return redirect()->route('riwayat.index')
+                             ->with('error', 'Akses ditolak.');
+        }
+
+        $transaksi->delete();
+
+        return redirect()->route('riwayat.index')
+                         ->with('success', 'Peminjaman berhasil dibatalkan.');
     }
-
-    $transaksi->delete();
-
-    return redirect()->route('history.index')
-                     ->with('success', 'Peminjaman berhasil dibatalkan.');
-}
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — BPS Kota Bogor</title>
+    <title>Login — RUJAK</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style="background-color: #f1f5f9;">
@@ -120,8 +120,7 @@
                 <div class="w-10 h-1 bg-white rounded mb-4"></div>
 
                 <p class="text-blue-100 text-sm leading-relaxed">
-                    BPS Kota Bogor — Sistem pengelolaan arsip peta SLS untuk mendukung kegiatan statistik yang akurat dan terpercaya.
-                </p>
+                    RUJAK — Repositori Umum dan Jejak Arsip Kewilayahan.                </p>
             </div>
 
             <div class="relative z-10">
@@ -175,15 +174,6 @@
                     @error('password')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
-                </div>
-
-                {{-- Remember Me --}}
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="remember" id="remember"
-                           class="w-4 h-4 accent-blue-500" />
-                    <label for="remember" class="text-sm text-gray-500">
-                        Ingat saya
-                    </label>
                 </div>
 
                 {{-- Error umum --}}

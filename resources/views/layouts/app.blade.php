@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'BPS Kota Bogor') }}</title>
+    <title>{{ config('app.name', 'RUJAK') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -30,8 +30,9 @@
 
         {{-- Logo --}}
         <div class="px-6 py-6 border-b border-gray-700 whitespace-nowrap">
-            <h1 class="text-xl font-bold text-white">BPS Kota Bogor</h1>
-            <p class="text-xs text-gray-400 mt-1">Sistem Arsip Peta</p>
+            <h1 class="text-xl font-bold text-white">RUJAK</h1>
+            <p class="text-xs text-gray-400 mt-1">Repositori Umum dan Jejak 
+                <br>Arsip Kewilayahan</p>
         </div>
 
         {{-- Navigasi --}}
@@ -49,36 +50,36 @@
             </a>
 
             {{-- TRANSAKSI --}}
-            <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Transaksi</p>
+            <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">REPOSITORI</p>
 
-            {{-- Management Sketsa --}}
-            <a href="{{ route('sketsa.wa') }}"
+            {{-- Repositori Peta --}}
+            <a href="{{ route('peta.wa') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                    {{ request()->routeIs('sketsa.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    {{ request()->routeIs('peta.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
-                Sketsa
+                Peta
             </a>
 
             {{-- History --}}
-            <a href="{{ route('history.index') }}"
+            <a href="{{ route('riwayat.index') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                    {{ request()->routeIs('history.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    {{ request()->routeIs('riwayat.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                History
+                Riwayat
             </a>
 
             {{-- DATA MASTER --}}
-            <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Data Master</p>
+
 
             {{-- Menu khusus Supervisor --}}
             @if(auth()->user()->isSupervisor())
-
+                <p class="text-xs uppercase text-gray-500 font-semibold px-3 pt-5 pb-2">Data Master</p>
                 {{-- Data Wilayah --}}
                 <a href="{{ route('wilayah.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium

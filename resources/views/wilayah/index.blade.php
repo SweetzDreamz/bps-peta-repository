@@ -4,6 +4,13 @@
 
 @section('content')
 
+@php
+function formatKode($value, $digits) {
+    if (is_null($value)) return '-';
+    return str_pad((string)(int)$value, $digits, '0', STR_PAD_LEFT);
+}
+@endphp
+
 {{-- Alert --}}
 @if(session('success'))
 <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2">
@@ -23,29 +30,35 @@
 @endif
 
 {{-- Header --}}
-<div class="flex items-center justify-between mb-4">
+<div class="flex items-start justify-between mb-4 flex-wrap gap-3">
     <div>
         <h3 class="text-xl font-bold text-gray-800">Data Wilayah SLS</h3>
         <p class="text-sm text-gray-500 mt-1">Pengelolaan Satuan Lingkungan Setempat</p>
     </div>
-    <div class="flex items-center gap-2">
-        {{-- Import Excel --}}
+    <div class="flex items-center gap-2 flex-wrap">
         <button onclick="openImportModal()"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
             Import Excel
         </button>
-        {{-- Gabung --}}
         <button id="btnGabung" onclick="toggleModeGabung()"
-                class="flex items-center gap-2 {{ count($pilihanIds) > 0 ? 'hidden' : '' }} bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+                class="{{ count($pilihanIds) > 0 ? 'hidden' : '' }} flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
             Gabung Wilayah
+        </button>
+        <button onclick="openPecahModal()"
+                class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+            Pecah Wilayah
         </button>
     </div>
 </div>
@@ -76,9 +89,38 @@
     </div>
 </div>
 
+{{-- Bar Konfirmasi Pecah --}}
+<div id="barPecah" class="hidden mb-4 px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg items-center justify-between">
+    <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="text-sm text-orange-700">
+            Mode Pemecahan aktif — pilih <strong>1 wilayah</strong> yang ingin dipecah
+        </span>
+        <span id="jumlahDipilihPecah" class="text-sm font-bold text-orange-800">0 dipilih</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <button onclick="lanjutPecah()"
+                id="btnLanjutPecah"
+                disabled
+                class="px-4 py-2 text-sm text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            Lanjut Pecah
+        </button>
+        <button onclick="batalModePecah()"
+                class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            Batal
+        </button>
+    </div>
+</div>
+
+
 {{-- Filter --}}
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-4">
     <form method="GET" action="{{ route('wilayah.index') }}" class="flex flex-wrap items-end gap-3">
+
+        {{-- Search --}}
         <div class="flex-1 min-w-48">
             <label class="block text-xs font-medium text-gray-500 mb-1">Cari</label>
             <div class="relative">
@@ -88,31 +130,53 @@
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari nama SLS, desa, kecamatan..."
+                       placeholder="Cari nama SLS, ketua, desa, kecamatan..."
                        class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"/>
             </div>
         </div>
-        <div class="min-w-36">
+
+        {{-- Kecamatan --}}
+        <div class="min-w-48">
             <label class="block text-xs font-medium text-gray-500 mb-1">Kecamatan</label>
-            <select name="kode_kec"
+            <select name="kode_kec" id="filter_kec_wilayah"
+                    onchange="loadDesaFilterWilayah(this.value)"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 @foreach($kecamatan as $kec)
-                    <option value="{{ $kec->kode_kec }}" {{ request('kode_kec') == $kec->kode_kec ? 'selected' : '' }}>
-                        {{ $kec->nama_kec }}
+                    <option value="{{ $kec->kode_kec }}"
+                            {{ request('kode_kec') == $kec->kode_kec ? 'selected' : '' }}>
+                        [{{ str_pad($kec->kode_kec, 3, '0', STR_PAD_LEFT) }}] {{ $kec->nama_kec }}
                     </option>
                 @endforeach
             </select>
         </div>
+
+        {{-- Desa --}}
+        <div class="min-w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Desa/Kelurahan</label>
+            <select name="kode_des" id="filter_des_wilayah"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Semua --</option>
+                @foreach($desa as $d)
+                    <option value="{{ $d->kode_des }}"
+                            {{ request('kode_des') == $d->kode_des ? 'selected' : '' }}>
+                        [{{ str_pad($d->kode_des, 3, '0', STR_PAD_LEFT) }}] {{ $d->nama_des }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Status --}}
         <div class="min-w-32">
             <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
             <select name="status"
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
-                <option value="aktif" {{ request('status') === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                <option value="aktif"    {{ request('status') === 'aktif'    ? 'selected' : '' }}>Aktif</option>
                 <option value="nonaktif" {{ request('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
             </select>
         </div>
+
         <div class="flex gap-2">
             <button type="submit"
                     class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -124,6 +188,18 @@
             </a>
         </div>
     </form>
+</div>
+
+{{-- Keterangan warna --}}
+<div class="flex items-center gap-4 text-xs text-gray-500 mb-3">
+    <div class="flex items-center gap-1.5">
+        <div class="w-3 h-3 rounded bg-yellow-100 border border-yellow-300"></div>
+        <span>Perlu pengeditan (hasil gabung/pecah)</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+        <div class="w-3 h-3 rounded bg-white border border-gray-200"></div>
+        <span>Normal</span>
+    </div>
 </div>
 
 {{-- Tabel --}}
@@ -141,7 +217,9 @@
                     {{-- Checkbox (muncul saat mode gabung) --}}
                     <th id="thCheckbox" class="hidden px-3 py-3 text-center w-10 bg-gray-50 border-r border-gray-200">
                         <input type="checkbox" id="checkAll" onchange="toggleAll(this)"
-                               class="w-4 h-4 accent-blue-600"/>
+                            class="w-4 h-4 accent-blue-600"/>
+                    </th>
+                    <th id="thCheckboxPecah" class="hidden px-3 py-3 text-center w-10 bg-gray-50 border-r border-gray-200">
                     </th>
                     <th class="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap w-10">No</th>
                     <th class="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">ID SubSLS</th>
@@ -174,7 +252,7 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse($wilayah as $index => $item)
-                <tr class="hover:bg-gray-50 transition-colors {{ $item->status === 'nonaktif' ? 'opacity-60' : '' }}"
+                <tr class="transition-colors {{ $item->perlu_edit ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50' }} {{ $item->status === 'nonaktif' ? 'opacity-60' : '' }}"
                     id="row-{{ $item->id }}">
 
                     {{-- Checkbox --}}
@@ -187,19 +265,50 @@
                             onchange="togglePilihan(this)"/>
                     </td>
 
+                    {{-- Checkbox Pecah — radio behavior (hanya bisa pilih 1) --}}
+                    <td id="tdCheckboxPecah-{{ $item->id }}" class="hidden px-3 py-3 text-center border-r border-gray-100">
+                        @if($item->status === 'aktif')
+                        <input type="radio"
+                            name="pecah_wilayah"
+                            class="row-check-pecah w-4 h-4 accent-orange-500"
+                            value="{{ $item->id }}"
+                            data-nama="{{ $item->nama_sls }}"
+                            data-des="{{ $item->nama_des }}"
+                            onchange="updatePilihPecah(this)"/>
+                        @endif
+                    </td>
+
                     <td class="px-3 py-3 text-gray-500 text-xs">
                         {{ ($wilayah->currentPage() - 1) * $wilayah->perPage() + $index + 1 }}
                     </td>
                     <td class="px-3 py-3 text-xs font-mono text-gray-600">{{ $item->id_subsls ?? '-' }}</td>
-                    <td class="px-3 py-3 font-medium text-gray-800">{{ $item->nama_sls }}</td>
+                    <td class="px-3 py-3">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-medium text-gray-800">{{ $item->nama_sls }}</span>
+                            @if($item->perlu_edit)
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-200 text-yellow-800">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                </svg>
+                                Perlu Edit
+                            </span>
+                            @endif
+                            @if($item->asal === 'gabung')
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Gabung</span>
+                            @elseif($item->asal === 'pecah')
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">Pecah</span>
+                            @endif
+                        </div>
+                    </td>
                     <td class="px-3 py-3 text-gray-600 text-xs">{{ $item->nama_ketua ?? '-' }}</td>
                     <td class="px-3 py-3 text-gray-600 text-xs">{{ $item->jenis ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_prop ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_kab ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_kec ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_des ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_sls ?? '-' }}</td>
-                    <td class="px-3 py-3 text-center text-xs font-mono">{{ $item->kode_subsls ?? '-' }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_prop, 2) }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_kab, 2) }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_kec, 3) }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_des, 3) }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_sls, 4) }}</td>
+                    <td class="px-3 py-3 text-center text-xs font-mono">{{ formatKode($item->kode_subsls, 2) }}</td>
                     <td class="px-3 py-3 text-center text-xs">{{ $item->klas ?? '-' }}</td>
                     <td class="px-3 py-3 text-gray-600 text-xs">{{ $item->nama_kec ?? '-' }}</td>
                     <td class="px-3 py-3 text-gray-600 text-xs">{{ $item->nama_des ?? '-' }}</td>
@@ -233,17 +342,6 @@
                                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </a>
-                            {{-- Tombol Pecah --}}
-                            @if($item->status === 'aktif')
-                            <button onclick="openPecahModal({{ $item->id }}, '{{ $item->nama_sls }}')"
-                                    title="Pecah Wilayah"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                                </svg>
-                            </button>
-                            @endif
                             {{-- Tombol Hapus --}}
                             <button onclick="openHapusModal({{ $item->id }}, '{{ $item->nama_sls }}')"
                                     title="Hapus"
@@ -359,47 +457,74 @@
                     <ul id="listWilayahDipilih" class="space-y-1"></ul>
                 </div>
 
+                {{-- Tipe Penggabungan --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">
                         Tipe Penggabungan <span class="text-red-500">*</span>
                     </label>
                     <select name="tipe_gabung" id="tipe_gabung" required
+                            onchange="toggleTipeGabung(this.value)"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="baru">Buat wilayah baru</option>
-                        <option value="ikut_pertama">Ikut wilayah pertama dipilih</option>
+                        <option value="pilih_aktif">Pilih wilayah aktif</option>
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">
-                        Nama Wilayah Hasil Gabungan <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="nama_baru" required
-                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="Contoh: RT 01 RW 05"/>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
+                {{-- Form untuk tipe: buat wilayah baru --}}
+                <div id="formBaru" class="space-y-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Nama Ketua</label>
-                        <input type="text" name="nama_ketua"
-                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Opsional"/>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            ID SubSLS <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="id_subsls_baru" id="id_subsls_baru" maxlength="16"
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Contoh: 3271010001000100"/>
+                        <p class="text-xs text-gray-400 mt-1">16 digit kode unik wilayah baru</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis</label>
-                        <input type="text" name="jenis"
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Nama SLS <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="nama_baru" id="nama_baru"
                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Contoh: RT"/>
+                               placeholder="Contoh: RT 01 RW 05"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Kode SubSLS</label>
+                        <input type="text" name="kode_subsls_baru" maxlength="2"
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Opsional — 2 digit"/>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                        <p class="text-xs text-blue-700">
+                            Wilayah yang digabung akan menjadi <strong>Nonaktif</strong>.
+                            Wilayah baru hasil gabungan akan berstatus <strong>Aktif</strong>.
+                            Nilai BTT, BTTK, BKU, BBtt Non, Usaha, dan Muatan akan dijumlahkan otomatis.
+                        </p>
                     </div>
                 </div>
 
-                <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <p class="text-xs text-orange-700">
-                        Wilayah yang digabung akan berubah status menjadi <strong>Nonaktif</strong>.
-                        Wilayah hasil gabungan akan berstatus <strong>Aktif</strong>.
-                    </p>
+                {{-- Form untuk tipe: pilih wilayah aktif --}}
+                <div id="formPilihAktif" class="hidden space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">
+                            Pilih wilayah yang tetap aktif <span class="text-red-500">*</span>
+                        </label>
+                        <select name="wilayah_aktif_id" id="wilayah_aktif_id"
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih wilayah --</option>
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Wilayah yang dipilih akan tetap aktif, sisanya menjadi nonaktif.</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-100 rounded-lg p-3">
+                        <p class="text-xs text-orange-700">
+                            Wilayah terpilih akan tetap <strong>Aktif</strong>.
+                            Wilayah lainnya akan menjadi <strong>Nonaktif</strong>.
+                            Nilai statistik akan dijumlahkan ke wilayah yang tetap aktif.
+                        </p>
+                    </div>
                 </div>
+
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button type="button" onclick="closeGabungModal()"
@@ -429,27 +554,33 @@
         <form method="POST" id="formPecah">
             @csrf
             <div class="px-6 py-4 space-y-4">
+                <input type="hidden" name="wilayah_id" id="pecah_wilayah_id_hidden"/>
 
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <p class="text-xs text-gray-500">Memecah wilayah:</p>
-                    <p class="text-sm font-semibold text-gray-800" id="namaPecah"></p>
+                {{-- Info wilayah yang dipecah --}}
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-0.5">Wilayah yang akan dipecah:</p>
+                    <p class="text-sm font-semibold text-gray-800" id="pecah_wilayah_info">-</p>
                 </div>
 
-                <div id="containerPecahan" class="space-y-3">
-                    {{-- Pecahan dinamis --}}
+                {{-- Pecahan --}}
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-medium text-gray-600">Wilayah Hasil Pecahan</label>
+                        <button type="button" onclick="tambahPecahan()"
+                                class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                            + Tambah Pecahan
+                        </button>
+                    </div>
+                    <div id="containerPecahan" class="space-y-3"></div>
                 </div>
-
-                <button type="button" onclick="tambahPecahan()"
-                        class="w-full py-2 text-sm text-blue-600 border border-blue-200 border-dashed rounded-lg hover:bg-blue-50 transition-colors">
-                    + Tambah Pecahan
-                </button>
 
                 <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <p class="text-xs text-orange-700">
-                        Wilayah asal akan berubah status menjadi <strong>Nonaktif</strong>.
-                        Semua wilayah pecahan akan berstatus <strong>Aktif</strong>.
+                        Wilayah asal akan menjadi <strong>Nonaktif</strong>.
+                        Centang pecahan yang ingin dijadikan <strong>Aktif</strong>.
                     </p>
                 </div>
+
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button type="button" onclick="closePecahModal()"
@@ -497,12 +628,13 @@
     </div>
 </div>
 
-{{-- Scripts --}}
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 let modeGabung = {{ count($pilihanIds) > 0 ? 'true' : 'false' }};
+let modePecah  = false;
+let pecahanCount = 0;
 
-// ===== INIT — tampilkan checkbox jika mode gabung aktif =====
+// ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
     if (modeGabung) {
         document.getElementById('thCheckbox').classList.remove('hidden');
@@ -511,20 +643,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ===== TOGGLE PILIHAN via AJAX =====
+// ===== Load desa saat kecamatan berubah (filter wilayah) =====
+function loadDesaFilterWilayah(kodeKec) {
+    const select = document.getElementById('filter_des_wilayah');
+    select.innerHTML = '<option value="">Memuat...</option>';
+    if (!kodeKec) {
+        select.innerHTML = '<option value="">-- Semua --</option>';
+        return;
+    }
+    // Gunakan route api/desa-by-kec yang sudah tersedia
+    fetch(`/api/desa-by-kec?kode_kec=${kodeKec}`)
+        .then(r => r.json())
+        .then(data => {
+            select.innerHTML = '<option value="">-- Semua --</option>';
+            if (data.length === 0) {
+                select.innerHTML = '<option value="">Tidak ada desa ditemukan</option>';
+                return;
+            }
+            data.forEach(d => {
+                const kode = d.kode_des ? String(d.kode_des).padStart(3, '0') : '-';
+                select.innerHTML += `<option value="${d.kode_des}">[${kode}] ${d.nama_des}</option>`;
+            });
+        })
+        .catch(() => {
+            select.innerHTML = '<option value="">Gagal memuat data</option>';
+        });
+}
+
+// ===== TOGGLE PILIHAN GABUNG via AJAX =====
 function togglePilihan(cb) {
     fetch('/wilayah/pilihan/toggle', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
         body: JSON.stringify({ id: cb.value })
     })
     .then(r => r.json())
-    .then(data => {
-        updateJumlahUI(data.total);
-    });
+    .then(data => updateJumlahUI(data.total));
 }
 
 function updateJumlahUI(total) {
@@ -544,7 +698,6 @@ function toggleModeGabung() {
 }
 
 function batalModeGabung() {
-    // Hapus semua pilihan di session
     fetch('/wilayah/pilihan/clear', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': CSRF }
@@ -562,21 +715,16 @@ function batalModeGabung() {
 }
 
 function toggleAll(master) {
-    const checks = document.querySelectorAll('.row-check');
+    const checks   = document.querySelectorAll('.row-check');
     const promises = [];
     checks.forEach(cb => {
         if (cb.checked !== master.checked) {
             cb.checked = master.checked;
-            promises.push(
-                fetch('/wilayah/pilihan/toggle', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': CSRF,
-                    },
-                    body: JSON.stringify({ id: cb.value })
-                })
-            );
+            promises.push(fetch('/wilayah/pilihan/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body: JSON.stringify({ id: cb.value })
+            }));
         }
     });
     Promise.all(promises).then(() => {
@@ -586,29 +734,98 @@ function toggleAll(master) {
     });
 }
 
+// ===== MODE PECAH =====
+function toggleModePecah() {
+    modePecah = true;
+    document.getElementById('barPecah').classList.remove('hidden');
+    document.getElementById('barPecah').classList.add('flex');
+    document.getElementById('thCheckboxPecah').classList.remove('hidden');
+    document.querySelectorAll('[id^="tdCheckboxPecah-"]').forEach(td => td.classList.remove('hidden'));
+}
+
+function batalModePecah() {
+    modePecah = false;
+    document.getElementById('barPecah').classList.add('hidden');
+    document.getElementById('barPecah').classList.remove('flex');
+    document.getElementById('thCheckboxPecah').classList.add('hidden');
+    document.querySelectorAll('[id^="tdCheckboxPecah-"]').forEach(td => td.classList.add('hidden'));
+    document.querySelectorAll('.row-check-pecah').forEach(r => r.checked = false);
+    document.getElementById('jumlahDipilihPecah').textContent = '0 dipilih';
+    const btn = document.getElementById('btnLanjutPecah');
+    if (btn) btn.disabled = true;
+}
+
+function updatePilihPecah(radio) {
+    const total = document.querySelectorAll('.row-check-pecah:checked').length;
+    document.getElementById('jumlahDipilihPecah').textContent = total + ' dipilih';
+    const btn = document.getElementById('btnLanjutPecah');
+    if (btn) btn.disabled = total < 1;
+}
+
+function lanjutPecah() {
+    const selected = document.querySelector('.row-check-pecah:checked');
+    if (!selected) { alert('Pilih 1 wilayah yang ingin dipecah.'); return; }
+
+    const wilayahId   = selected.value;
+    const wilayahNama = selected.dataset.nama;
+    const wilayahDes  = selected.dataset.des || '';
+
+    document.getElementById('pecah_wilayah_id_hidden').value = wilayahId;
+    document.getElementById('pecah_wilayah_info').textContent = wilayahNama + (wilayahDes ? ' — ' + wilayahDes : '');
+    document.getElementById('formPecah').action = '/wilayah/pecah-pilih';
+
+    document.getElementById('containerPecahan').innerHTML = '';
+    pecahanCount = 0;
+    tambahPecahan();
+    tambahPecahan();
+
+    document.getElementById('modalPecah').classList.remove('hidden');
+    document.getElementById('modalPecah').classList.add('flex');
+}
+
+// ===== TOGGLE TIPE GABUNG =====
+function toggleTipeGabung(val) {
+    const formBaru  = document.getElementById('formBaru');
+    const formPilih = document.getElementById('formPilihAktif');
+    const idSubsls  = document.getElementById('id_subsls_baru');
+    const namaBaru  = document.getElementById('nama_baru');
+
+    if (val === 'baru') {
+        formBaru.classList.remove('hidden');
+        formPilih.classList.add('hidden');
+        if (idSubsls) idSubsls.required = true;
+        if (namaBaru) namaBaru.required = true;
+    } else {
+        formBaru.classList.add('hidden');
+        formPilih.classList.remove('hidden');
+        if (idSubsls) idSubsls.required = false;
+        if (namaBaru) namaBaru.required = false;
+    }
+}
+
 // ===== MODAL GABUNG =====
 function openGabungModal() {
     fetch('/wilayah/pilihan/list')
         .then(r => r.json())
         .then(data => {
-            if (data.ids.length < 2) {
-                alert('Pilih minimal 2 wilayah untuk digabung.');
-                return;
-            }
-
-            // Isi hidden inputs
-            let inputHtml = '';
-            let listHtml  = '';
+            if (data.ids.length < 2) { alert('Pilih minimal 2 wilayah untuk digabung.'); return; }
+            let inputHtml  = '';
+            let listHtml   = '';
+            let optionHtml = '';
             data.data.forEach((w, i) => {
-                inputHtml += `<input type="hidden" name="wilayah_ids[]" value="${w.id}"/>`;
-                listHtml  += `<li class="text-xs text-gray-700 flex items-center gap-2">
+                inputHtml  += `<input type="hidden" name="wilayah_ids[]" value="${w.id}"/>`;
+                listHtml   += `<li class="text-xs text-gray-700 flex items-center gap-2">
                     <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">${i+1}</span>
-                    ${w.nama_sls} — ${w.nama_des ?? ''}
+                    ${w.nama_sls} — ${w.nama_des || ''}
                 </li>`;
+                optionHtml += `<option value="${w.id}">${w.nama_sls} — ${w.nama_des || ''}</option>`;
             });
-
-            document.getElementById('inputWilayahIds').innerHTML = inputHtml;
+            document.getElementById('inputWilayahIds').innerHTML   = inputHtml;
             document.getElementById('listWilayahDipilih').innerHTML = listHtml;
+            const selAktif = document.getElementById('wilayah_aktif_id');
+            if (selAktif) selAktif.innerHTML = '<option value="">-- Pilih wilayah --</option>' + optionHtml;
+            document.getElementById('tipe_gabung').value = 'baru';
+            toggleTipeGabung('baru');
             document.getElementById('modalGabung').classList.remove('hidden');
             document.getElementById('modalGabung').classList.add('flex');
         });
@@ -619,7 +836,6 @@ function closeGabungModal() {
     document.getElementById('modalGabung').classList.remove('flex');
 }
 
-// Setelah form gabung submit, clear session
 document.getElementById('formGabung').addEventListener('submit', function() {
     fetch('/wilayah/pilihan/clear', {
         method: 'POST',
@@ -627,49 +843,42 @@ document.getElementById('formGabung').addEventListener('submit', function() {
     });
 });
 
-// ===== PECAH =====
-let pecahanCount = 0;
-
-function openPecahModal(id, nama) {
-    document.getElementById('namaPecah').textContent = nama;
-    document.getElementById('formPecah').action = '/wilayah/' + id + '/pecah';
-    document.getElementById('containerPecahan').innerHTML = '';
-    pecahanCount = 0;
-    tambahPecahan();
-    tambahPecahan();
-    document.getElementById('modalPecah').classList.remove('hidden');
-    document.getElementById('modalPecah').classList.add('flex');
+// ===== MODAL PECAH =====
+function openPecahModal() {
+    toggleModePecah();
 }
 
 function closePecahModal() {
     document.getElementById('modalPecah').classList.add('hidden');
     document.getElementById('modalPecah').classList.remove('flex');
+    batalModePecah();
 }
 
 function tambahPecahan() {
-    const i = pecahanCount++;
+    const i   = pecahanCount++;
     const html = `
         <div class="border border-gray-200 rounded-lg p-3 space-y-2" id="pecahan-${i}">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold text-gray-600">Pecahan ${i + 1}</p>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="pecahan[${i}][aktif]" value="1" id="aktif_${i}"
+                           class="w-4 h-4 accent-green-600"/>
+                    <label for="aktif_${i}" class="text-xs font-semibold text-gray-600 cursor-pointer">
+                        Pecahan ${i + 1} — Jadikan Aktif
+                    </label>
+                </div>
                 ${i >= 2 ? `<button type="button" onclick="hapusPecahan(${i})"
                     class="text-red-400 hover:text-red-600 text-xs">Hapus</button>` : ''}
             </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="col-span-2">
-                    <input type="text" name="pecahan[${i}][nama]" required
-                           placeholder="Nama SLS *"
-                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                </div>
-                <input type="text" name="pecahan[${i}][jenis]"
-                       placeholder="Jenis (opsional)"
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                <input type="text" name="pecahan[${i}][ketua]"
-                       placeholder="Ketua (opsional)"
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                <input type="number" name="pecahan[${i}][kk]" min="0"
-                       placeholder="Jumlah KK"
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            <div class="grid grid-cols-1 gap-2">
+                <input type="text" name="pecahan[${i}][id_subsls]" required
+                       placeholder="ID SubSLS * (16 digit)" maxlength="16"
+                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <input type="text" name="pecahan[${i}][nama]" required
+                       placeholder="Nama SLS *"
+                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <input type="text" name="pecahan[${i}][kode_subsls]" maxlength="2"
+                       placeholder="Kode SubSLS (opsional, 2 digit)"
+                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
             </div>
         </div>`;
     document.getElementById('containerPecahan').insertAdjacentHTML('beforeend', html);
