@@ -58,7 +58,7 @@ class SketsaController extends Controller
     }
 
     public function wa(Request $request)  { return $this->index($request, 'WA'); }
-    public function sls(Request $request) { return $this->index($request, 'SLS'); }
+    public function ws(Request $request)  { return $this->index($request, 'WS'); }
 
     // =====================
     // STORE - Tambah
@@ -66,7 +66,7 @@ class SketsaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_peta'  => 'required|in:WA,SLS',
+            'jenis_peta'  => 'required|in:WA,WS',
             'wilayah_id'  => 'required|exists:wilayah,id',
             'kegiatan_id' => 'required|exists:kegiatan,id',
             'tahun'       => 'required|digits:4',
@@ -86,14 +86,13 @@ class SketsaController extends Controller
         Peta::create([
             'jenis_peta'  => $request->jenis_peta,
             'wilayah_id'  => $request->wilayah_id,
-            'sls_id'      => null,
             'kegiatan_id' => $request->kegiatan_id,
             'tahun'       => $request->tahun,
             'path_file'   => $path,
             'user_id'     => auth()->id(),
         ]);
 
-        $route = $request->jenis_peta === 'WA' ? 'peta.wa' : 'peta.sls';
+        $route = $request->jenis_peta === 'WA' ? 'peta.wa' : 'peta.ws';
         return redirect()->route($route)->with('success', 'Peta berhasil ditambahkan.');
     }
 
@@ -128,7 +127,7 @@ class SketsaController extends Controller
             'path_file'   => $peta->path_file,
         ]);
 
-        $route = $peta->jenis_peta === 'WA' ? 'peta.wa' : 'peta.sls';
+        $route = $peta->jenis_peta === 'WA' ? 'peta.wa' : 'peta.ws';
         return redirect()->route($route)->with('success', 'Peta berhasil diperbarui.');
     }
 
@@ -141,7 +140,7 @@ class SketsaController extends Controller
         $jenis = $peta->jenis_peta;
         $peta->delete();
 
-        $route = $jenis === 'WA' ? 'peta.wa' : 'peta.sls';
+        $route = $jenis === 'WA' ? 'peta.wa' : 'peta.ws';
         return redirect()->route($route)->with('success', 'Peta berhasil dihapus.');
     }
 

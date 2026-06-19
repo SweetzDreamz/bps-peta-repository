@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Riwayat')
+
 @section('page-title', 'Riwayat Peminjaman')
 
 @section('content')
@@ -86,7 +88,7 @@
                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Semua --</option>
                 <option value="WA"  {{ request('jenis_peta') === 'WA'  ? 'selected' : '' }}>WA</option>
-                <option value="SLS" {{ request('jenis_peta') === 'SLS' ? 'selected' : '' }}>SLS</option>
+                <option value="SLS" {{ request('jenis_peta') === 'WS' ? 'selected' : '' }}>WS</option>
             </select>
         </div>
 

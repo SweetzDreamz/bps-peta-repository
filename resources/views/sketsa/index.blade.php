@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('page-title', 'Peta ' . $jenis)
+@section('title', 'Peta')
+
+@section('page-title', $jenis === 'WA' ? 'Peta WA' : 'Peta WS')
 
 @section('content')
 
@@ -26,22 +28,22 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <div class="flex items-center gap-3 mb-1">
-            {{-- Tab WA / SLS --}}
+            {{-- Tab WA / WS --}}
             <a href="{{ route('peta.wa') }}"
-               class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-                      {{ $jenis === 'WA' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+                    {{ $jenis === 'WA' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
                 WA
             </a>
-            <a href="{{ route('peta.sls') }}"
-               class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-                      {{ $jenis === 'SLS' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
-                SLS
+            <a href="{{ route('peta.ws') }}"
+            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+                    {{ $jenis === 'WS' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                WS
             </a>
         </div>
         <h3 class="text-xl font-bold text-gray-800">Repositori Peta — {{ $jenis }}</h3>
         <p class="text-sm text-gray-500 mt-1">
             @if($jenis === 'WA') Peta Wilayah Administrasi
-            @else Peta Satuan Lingkungan Setempat
+            @else Peta Wilayah Statistik
             @endif
         </p>
     </div>
@@ -622,7 +624,7 @@ function loadDesaTambah(kodeKec) {
 
 // ===== LOAD SLS (form tambah — hanya jenis SLS) =====
 function loadSlsTambah(kodeDes) {
-    if (JENIS !== 'SLS') return;
+    if (JENIS !== 'WS') return;
     const select  = document.getElementById('tambah_sls_wilayah');
     const kodeKec = document.getElementById('tambah_kec').value;
     if (!select) return;
@@ -672,7 +674,7 @@ function filterDesaChange(kodeKec) {
 
 // ===== FILTER — SLS berubah =====
 function filterSlsChange(kodeDes) {
-    if (JENIS !== 'SLS') return;
+    if (JENIS !== 'WS') return;
     const select  = document.getElementById('filter_sls');
     const kodeKec = document.getElementById('filter_kec').value;
     if (!select) return;
@@ -711,7 +713,7 @@ if (filterKec && filterKec.value) {
                 selectDesa.innerHTML += `<option value="${d.kode_des}" ${sel}>[${kodeDes}] ${d.nama_des}</option>`;
             });
 
-            if (kodeDesAktif && JENIS === 'SLS') {
+            if (kodeDesAktif && JENIS === 'WS') {
                 fetch(`/api/sls-by-des?kode_kec=${kodeKecVal}&kode_des=${kodeDesAktif}`)
                     .then(r => r.json())
                     .then(slsData => {

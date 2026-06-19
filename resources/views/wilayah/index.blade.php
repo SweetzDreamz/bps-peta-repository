@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Wilayah')
+
 @section('page-title', 'Data Wilayah SLS')
 
 @section('content')

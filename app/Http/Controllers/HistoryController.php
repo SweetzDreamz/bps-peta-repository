@@ -118,7 +118,6 @@ class HistoryController extends Controller
         Peta::create([
             'jenis_peta'  => $petaLama->jenis_peta,
             'wilayah_id'  => $petaLama->wilayah_id,
-            'sls_id'      => null,
             'kegiatan_id' => $transaksi->kegiatan_id,
             'tahun'       => $petaLama->tahun,
             'path_file'   => $path,

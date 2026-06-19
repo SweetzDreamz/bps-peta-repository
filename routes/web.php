@@ -30,9 +30,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Peta (sebelumnya Sketsa) semua role bisa akses
-    Route::get('/peta/wa',  [SketsaController::class, 'wa'])->name('peta.wa');
-    Route::get('/peta/sls', [SketsaController::class, 'sls'])->name('peta.sls');
-    Route::post('/peta',    [SketsaController::class, 'store'])->name('peta.store');
+    Route::get('/peta/wa', [SketsaController::class, 'wa'])->name('peta.wa');
+    Route::get('/peta/ws', [SketsaController::class, 'ws'])->name('peta.ws');
+    Route::post('/peta',   [SketsaController::class, 'store'])->name('peta.store');
     Route::put('/peta/{peta}',    [SketsaController::class, 'update'])->name('peta.update');
     Route::delete('/peta/{peta}', [SketsaController::class, 'destroy'])->name('peta.destroy');
     Route::post('/peta/{peta}/download', [SketsaController::class, 'download'])->name('peta.download');
